@@ -26,7 +26,7 @@ class UserController extends AbstractController
 
         $jsonCurrentUser = $serializer->serialize($currentUser, 'json', $context);
 
-        return new JsonResponse($jsonCurrentUser, Response::HTTP_OK, ['accept' => 'jsons'], true);
+        return new JsonResponse($jsonCurrentUser, Response::HTTP_OK, [], true);
     }
 
     #[Route('/api/register', name: 'user.register', methods: ['POST'])]
@@ -65,15 +65,20 @@ class UserController extends AbstractController
     #[Route('/api/user/{id}', name: 'user.delete', methods: ['DELETE'])]
     public function deactivateUser(User $user, EntityManagerInterface $entityManager): JsonResponse
     {
+        if (!$user)
+        {
+            return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+        }
+
         $currentUser = $this->getUser();
 
         if (in_array("ROLE_ADMIN", $currentUser->getRoles()) || $user->getEmail() == $currentUser->getUserIdentifier())
         {
             $user->setStatus(false);
             $entityManager->flush();
-            return new JsonResponse(null, Response::HTTP_NO_CONTENT, []);
+            return new JsonResponse(null, Response::HTTP_NO_CONTENT);
         } else {
-            return new JsonResponse(null, Response::HTTP_UNAUTHORIZED, []);
+            return new JsonResponse(null, Response::HTTP_UNAUTHORIZED);
         }
     }
 }

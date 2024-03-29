@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\ServiceTypeRepository;
 use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: ServiceTypeRepository::class)]
 class ServiceType
@@ -11,13 +12,16 @@ class ServiceType
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['getServiceType'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $Name = null;
+    #[Groups(['getServiceType'])]
+    private ?string $name = null;
 
     #[ORM\Column]
-    private ?\DateInterval $Duration = null;
+    #[Groups(['getServiceType'])]
+    private ?\DateInterval $duration = null;
 
     #[ORM\Column]
     private ?bool $status = null;
@@ -29,24 +33,24 @@ class ServiceType
 
     public function getName(): ?string
     {
-        return $this->Name;
+        return $this->name;
     }
 
-    public function setName(string $Name): static
+    public function setName(string $name): static
     {
-        $this->Name = $Name;
+        $this->name = $name;
 
         return $this;
     }
 
     public function getDuration(): ?\DateInterval
     {
-        return $this->Duration;
+        return $this->duration;
     }
 
-    public function setDuration(\DateInterval $Duration): static
+    public function setDuration(\DateInterval $duration): static
     {
-        $this->Duration = $Duration;
+        $this->duration = $duration;
 
         return $this;
     }

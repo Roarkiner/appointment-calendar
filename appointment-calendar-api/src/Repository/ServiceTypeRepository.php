@@ -21,28 +21,27 @@ class ServiceTypeRepository extends ServiceEntityRepository
         parent::__construct($registry, ServiceType::class);
     }
 
-    //    /**
-    //     * @return ServiceType[] Returns an array of ServiceType objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('s')
-    //            ->andWhere('s.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('s.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    public function findActive($id): ServiceType | null
+    {
+        $qb = $this->createQueryBuilder('e')
+            ->where('e.id = :id')
+            ->andWhere('e.status = :status')
+            ->setParameter('id', $id)
+            ->setParameter('status', true);
 
-    //    public function findOneBySomeField($value): ?ServiceType
-    //    {
-    //        return $this->createQueryBuilder('s')
-    //            ->andWhere('s.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        $query = $qb->getQuery();
+
+        return $query->getOneOrNullResult();
+    }
+
+    public function findAllActive(): array
+    {
+        $qb = $this->createQueryBuilder('e')
+            ->where('e.status = :status')
+            ->setParameter('status', true);
+
+        $query = $qb->getQuery();
+
+        return $query->getResult();
+    }
 }
