@@ -74,8 +74,10 @@ class AppFixtures extends Fixture
 
             if ($i % 5 === 0) {
                 $appointment = $this->GenerateAppointment($slot, $serviceTypes, $user);
-
-                $manager->persist($appointment);
+                if ($appointment != null) 
+                {
+                    $manager->persist($appointment);
+                }
             }
         }
 
@@ -115,7 +117,7 @@ class AppFixtures extends Fixture
         return $slot;
     }
 
-    private function GenerateAppointment(Slot $slot, array $serviceTypes, User $user): Appointment
+    private function GenerateAppointment(Slot $slot, array $serviceTypes, User $user): ?Appointment
     {
         $appointment = new Appointment();
         $randomServiceType = $this->faker->randomElement($serviceTypes); 
@@ -126,6 +128,10 @@ class AppFixtures extends Fixture
 
         $availableRange = $diffBetweenDates - $serviceTypeDuration;
 
+        if ($availableRange < 0) {
+            return null;
+        }
+
         $randomStartMinutes = rand(0, $availableRange);
         $randomStartDate = DateTime::createFromInterface($slot->getStartDate());
         $randomStartDate->add(new DateInterval("PT{$randomStartMinutes}M"));
@@ -134,6 +140,7 @@ class AppFixtures extends Fixture
         $randomStartDate->setTime((int)$randomStartDate->format('H'), $randomHourMinutes, 0);
 
         $appointment->setStartDate($randomStartDate)
+        ->setEndDate($randomStartDate->add(new DateInterval("PT{$serviceTypeDuration}M")))
         ->setServiceType($randomServiceType)
         ->setUser($user)
         ->setStatus(true);
