@@ -20,12 +20,6 @@ class Slot
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $endDate = null;
 
-    #[ORM\Column]
-    private ?bool $recurring = null;
-
-    #[ORM\Column]
-    private ?bool $exception = null;
-
     public function getId(): ?int
     {
         return $this->id;
@@ -51,30 +45,6 @@ class Slot
     public function setEndDate(\DateTimeInterface $endDate): static
     {
         $this->endDate = $endDate;
-
-        return $this;
-    }
-
-    public function isRecurring(): ?bool
-    {
-        return $this->recurring;
-    }
-
-    public function setRecurring(bool $recurring): static
-    {
-        $this->recurring = $recurring;
-
-        return $this;
-    }
-
-    public function isException(): ?bool
-    {
-        return $this->exception;
-    }
-
-    public function setException(bool $exception): static
-    {
-        $this->exception = $exception;
 
         return $this;
     }
