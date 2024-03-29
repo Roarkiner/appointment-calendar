@@ -21,7 +21,7 @@ class ServiceTypeRepository extends ServiceEntityRepository
         parent::__construct($registry, ServiceType::class);
     }
 
-    public function findActive($id): ServiceType | null
+    public function findActive($id): ?ServiceType
     {
         $qb = $this->createQueryBuilder('e')
             ->where('e.id = :id')

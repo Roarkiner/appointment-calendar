@@ -21,7 +21,7 @@ class SlotRepository extends ServiceEntityRepository
         parent::__construct($registry, Slot::class);
     }
 
-    public function findActive($id): Slot | null
+    public function findActive($id): ?Slot
     {
         $qb = $this->createQueryBuilder('e')
             ->where('e.id = :id')
