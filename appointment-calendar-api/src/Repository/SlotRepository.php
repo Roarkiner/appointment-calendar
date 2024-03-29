@@ -21,28 +21,27 @@ class SlotRepository extends ServiceEntityRepository
         parent::__construct($registry, Slot::class);
     }
 
-    //    /**
-    //     * @return Slot[] Returns an array of Slot objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('s')
-    //            ->andWhere('s.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('s.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    public function findActive($id): Slot | null
+    {
+        $qb = $this->createQueryBuilder('e')
+            ->where('e.id = :id')
+            ->andWhere('e.status = :status')
+            ->setParameter('id', $id)
+            ->setParameter('status', true);
 
-    //    public function findOneBySomeField($value): ?Slot
-    //    {
-    //        return $this->createQueryBuilder('s')
-    //            ->andWhere('s.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        $query = $qb->getQuery();
+
+        return $query->getOneOrNullResult();
+    }
+
+    public function findAllActive(): array
+    {
+        $qb = $this->createQueryBuilder('e')
+            ->where('e.status = :status')
+            ->setParameter('status', true);
+
+        $query = $qb->getQuery();
+
+        return $query->getResult();
+    }
 }

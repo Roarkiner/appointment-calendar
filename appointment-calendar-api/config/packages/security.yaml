@@ -29,6 +29,8 @@ security:
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/service-type$, roles: ROLE_ADMIN, methods: [POST] }
         - { path: ^/api/service-type/\d+$, roles: ROLE_ADMIN, methods: [PATCH, DELETE] }
+        - { path: ^/api/slot$, roles: ROLE_ADMIN, methods: [POST] }
+        - { path: ^/api/slot/\d+$, roles: ROLE_ADMIN, methods: [PATCH, DELETE] }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
