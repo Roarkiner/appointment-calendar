@@ -42,6 +42,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Appointment::class, mappedBy: 'user', orphanRemoval: true)]
     private Collection $appointments;
 
+    #[ORM\Column]
+    private ?bool $status = null;
+
     public function __construct()
     {
         $this->appointments = new ArrayCollection();
@@ -172,6 +175,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
                 $appointment->setUser(null);
             }
         }
+
+        return $this;
+    }
+
+    public function isStatus(): ?bool
+    {
+        return $this->status;
+    }
+
+    public function setStatus(bool $status): static
+    {
+        $this->status = $status;
 
         return $this;
     }

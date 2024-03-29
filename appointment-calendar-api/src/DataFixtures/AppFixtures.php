@@ -43,7 +43,8 @@ class AppFixtures extends Fixture
         ->setLastname("Emailer")
         ->setFirstname("Demo")
         ->setRoles(["ROLE_ADMIN"])
-        ->setPassword($this->passHasher->hashPassword($admin, "admin"));
+        ->setPassword($this->passHasher->hashPassword($admin, "admin"))
+        ->setStatus(true);
         $manager->persist($admin);
             
         $user = new User();
@@ -51,7 +52,8 @@ class AppFixtures extends Fixture
         ->setLastname("Sample")
         ->setFirstname("User")
         ->setRoles(["ROLE_USER"])
-        ->setPassword($this->passHasher->hashPassword($user, "user"));
+        ->setPassword($this->passHasher->hashPassword($user, "user"))
+        ->setStatus(true);
         $manager->persist($user);
 
         $serviceTypes = [];
@@ -91,7 +93,8 @@ class AppFixtures extends Fixture
         $dateInterval = new DateInterval($intervalSpec);
 
         $serviceType->setName($this->faker->words(2, true))
-        ->setDuration($dateInterval);
+        ->setDuration($dateInterval)
+        ->setStatus(true);
 
         return $serviceType;
     }
@@ -106,7 +109,8 @@ class AppFixtures extends Fixture
         $endTime = clone $currentDate->setTime($endHour, mt_rand(0, 3) * 15);
 
         $slot->setStartDate($startTime)
-        ->setEndDate($endTime);
+        ->setEndDate($endTime)
+        ->setStatus(true);
         
         return $slot;
     }
@@ -131,7 +135,8 @@ class AppFixtures extends Fixture
 
         $appointment->setStartDate($randomStartDate)
         ->setServiceType($randomServiceType)
-        ->setUser($user);
+        ->setUser($user)
+        ->setStatus(true);
 
         return $appointment;
     }

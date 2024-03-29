@@ -19,6 +19,9 @@ class ServiceType
     #[ORM\Column]
     private ?\DateInterval $Duration = null;
 
+    #[ORM\Column]
+    private ?bool $status = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -44,6 +47,18 @@ class ServiceType
     public function setDuration(\DateInterval $Duration): static
     {
         $this->Duration = $Duration;
+
+        return $this;
+    }
+
+    public function isStatus(): ?bool
+    {
+        return $this->status;
+    }
+
+    public function setStatus(bool $status): static
+    {
+        $this->status = $status;
 
         return $this;
     }
