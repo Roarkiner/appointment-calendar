@@ -42,18 +42,22 @@ class SlotController extends AbstractController
     }
 
     #[Route('/api/slot', name: 'slot.create', methods: ['POST'])]
-    public function createSlot(Request $request, EntityManagerInterface $entityManager, SerializerInterface $serializer, ValidatorInterface $validator): JsonResponse
+    public function createSlot(Request $request, 
+        EntityManagerInterface $entityManager,
+        SlotRepository $slotRepository,
+        SerializerInterface $serializer, 
+        ValidatorInterface $validator): JsonResponse
     {
-        /** @var Slot $slot */
-        $slot = $serializer->deserialize(
+        /** @var Slot $newSlot  */
+        $newSlot  = $serializer->deserialize(
             $request->getContent(),
             Slot::class, 
             'json'
         );
         
-        $slot->setStatus(true);
+        $newSlot ->setStatus(true);
     
-        $errors = $validator->validate($slot);
+        $errors = $validator->validate($newSlot );
         
         if (count($errors) > 0) {
             $messages = [];
@@ -62,20 +66,44 @@ class SlotController extends AbstractController
             }
             return new JsonResponse(['errors' => $messages], Response::HTTP_BAD_REQUEST);
         }
-        
-        $entityManager->persist($slot);
+
+        $mergedSlotIds = [];
+
+        $overlappingSlots = $slotRepository->findOverlappingSlots($newSlot->getStartDate(), $newSlot->getEndDate());
+
+        foreach ($overlappingSlots as $overlap) {
+            if ($overlap->getStartDate() < $newSlot->getStartDate()) {
+                $newSlot->setStartDate($overlap->getStartDate());
+            }
+            if ($overlap->getEndDate() > $newSlot->getEndDate()) {
+                $newSlot->setEndDate($overlap->getEndDate());
+            }
+            array_push($mergedSlotIds, $overlap->getId());
+            $entityManager->remove($overlap);
+        }
+
+        $entityManager->persist($newSlot);
         $entityManager->flush();
         
         $context = SerializationContext::create()->setGroups(["getSlot"]);
-        $jsonSlot = $serializer->serialize($slot, 'json', $context);
-        return new JsonResponse($jsonSlot, Response::HTTP_CREATED, [], true);
+        $jsonSlot = $serializer->serialize($newSlot, 'json', $context);
+        $responseMessage = [
+            'slot' => json_decode($jsonSlot),
+            'message' => 'Merged with slots: ' . implode(', ', $mergedSlotIds)
+        ];
+        return new JsonResponse($responseMessage, Response::HTTP_CREATED, [], false);
     }
 
     #[Route('/api/slot/{id}', name: 'slot.update', methods: ['PATCH'])]
-    public function updateSlot(int $id, Request $request, SlotRepository $repository, EntityManagerInterface $entityManager, SerializerInterface $serializer, ValidatorInterface $validator): JsonResponse
+    public function updateSlot(int $id, 
+        Request $request, 
+        SlotRepository $slotRepository, 
+        EntityManagerInterface $entityManager, 
+        SerializerInterface $serializer, 
+        ValidatorInterface $validator): JsonResponse
     {
-        $slot = $repository->findActive($id);
-        if (!$slot) {
+        $existingSlot = $slotRepository->findActive($id);
+        if (!$existingSlot) {
             return new JsonResponse(null, Response::HTTP_NOT_FOUND);
         }
 
@@ -86,11 +114,11 @@ class SlotController extends AbstractController
             'json'
         );
         
-        $slot->setStartDate($requestSlot->getStartDate() ?? $slot->getStartDate())
-        ->setEndDate($requestSlot->getEndDate() ?? $slot->getEndDate())
+        $existingSlot->setStartDate($requestSlot->getStartDate() ?? $existingSlot->getStartDate())
+        ->setEndDate($requestSlot->getEndDate() ?? $existingSlot->getEndDate())
         ->setStatus(true);
 
-        $errors = $validator->validate($slot);
+        $errors = $validator->validate($existingSlot);
         
         if (count($errors) > 0) {
             $messages = [];
@@ -100,12 +128,31 @@ class SlotController extends AbstractController
             return new JsonResponse(['errors' => $messages], Response::HTTP_BAD_REQUEST);
         }
 
-        $entityManager->persist($slot);
+        $mergedSlotIds = [];
+
+        $overlappingSlots = $slotRepository->findOverlappingSlots($existingSlot->getStartDate(), $existingSlot->getEndDate());
+
+        foreach ($overlappingSlots as $overlap) {
+            if ($overlap->getStartDate() < $existingSlot->getStartDate()) {
+                $existingSlot->setStartDate($overlap->getStartDate());
+            }
+            if ($overlap->getEndDate() > $existingSlot->getEndDate()) {
+                $existingSlot->setEndDate($overlap->getEndDate());
+            }
+            array_push($mergedSlotIds, $overlap->getId());
+            $entityManager->remove($overlap);
+        }
+
+        $entityManager->persist($existingSlot);
         $entityManager->flush();
 
         $context = SerializationContext::create()->setGroups(["getSlot"]);
-        $jsonSlot = $serializer->serialize($slot, 'json', $context);
-        return new JsonResponse($jsonSlot, Response::HTTP_OK, [], true);
+        $jsonSlot = $serializer->serialize($existingSlot, 'json', $context);
+        $responseMessage = [
+            'slot' => json_decode($jsonSlot),
+            'message' => 'Merged with slots: ' . implode(', ', $mergedSlotIds)
+        ];
+        return new JsonResponse($responseMessage, Response::HTTP_OK, [], false);
     }
 
     #[Route('/api/slot/{id}', name: 'slot.delete', methods: ['DELETE'])]

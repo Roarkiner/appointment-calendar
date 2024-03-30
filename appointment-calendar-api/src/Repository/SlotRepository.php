@@ -24,9 +24,9 @@ class SlotRepository extends ServiceEntityRepository
 
     public function findActive($id): ?Slot
     {
-        $qb = $this->createQueryBuilder('e')
-            ->where('e.id = :id')
-            ->andWhere('e.status = :status')
+        $qb = $this->createQueryBuilder('slot')
+            ->where('slot.id = :id')
+            ->andWhere('slot.status = :status')
             ->setParameter('id', $id)
             ->setParameter('status', true);
 
@@ -37,8 +37,8 @@ class SlotRepository extends ServiceEntityRepository
 
     public function findAllActive(): array
     {
-        $qb = $this->createQueryBuilder('e')
-            ->where('e.status = :status')
+        $qb = $this->createQueryBuilder('slot')
+            ->where('slot.status = :status')
             ->setParameter('status', true);
 
         $query = $qb->getQuery();
@@ -63,5 +63,21 @@ class SlotRepository extends ServiceEntityRepository
         }
 
         return $slot;
+    }
+
+    public function findOverlappingSlots(\DateTimeInterface $start, \DateTimeInterface $end, int $slotId = null): array
+    {
+        $qb = $this->createQueryBuilder('slot');
+        $qb->where('slot.endDate > :start AND slot.startDate < :end')
+            ->setParameter('start', $start)
+            ->setParameter('end', $end);
+
+        if ($slotId !== null) 
+        {
+            $qb->andWhere('slot.id != :slotId')
+                ->setParameter('slotId', $slotId);
+        }
+
+        return $qb->getQuery()->getResult();
     }
 }
