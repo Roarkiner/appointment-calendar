@@ -3,8 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\ServiceType;
-use App\Entity\Appointment;
 use App\Model\ServiceTypeCreationRequestModel;
+use App\Repository\AppointmentRepository;
 use App\Repository\ServiceTypeRepository;
 use DateInterval;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -17,13 +17,26 @@ use JMS\Serializer\SerializerInterface;
 use JMS\Serializer\SerializationContext;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Validator\Constraints;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
+
 
 class ServiceTypeController extends AbstractController
 {
     #[Route('/api/service-type/{id}', name: 'service_type.get', methods: ['GET'])]
-    public function getServiceType(int $id, ServiceTypeRepository $repository, SerializerInterface $serializer, Request $request): JsonResponse
+    public function getServiceType(int $id, 
+        ServiceTypeRepository $repository, 
+        SerializerInterface $serializer, 
+        Request $request,
+        CacheInterface $cache): JsonResponse
     {
-        $serviceType = $repository->findActive($id);
+        $cacheKey = "service_type.get/{$id}";
+
+        $serviceType = $cache->get($cacheKey, function (ItemInterface $item) use ($repository, $id) {
+            $item->expiresAfter(3600);
+
+            return $repository->findActive($id);
+        });
 
         if (!$serviceType || !$serviceType->isStatus()) {
             return new JsonResponse(null, Response::HTTP_NOT_FOUND);
@@ -44,9 +57,18 @@ class ServiceTypeController extends AbstractController
     }
 
     #[Route('/api/service-type', name: 'service_type.get_all', methods: ['GET'])]
-    public function getAllServiceTypes(SerializerInterface $serializer, ServiceTypeRepository $repository, Request $request): JsonResponse
+    public function getAllServiceTypes(SerializerInterface $serializer, 
+        ServiceTypeRepository $repository,
+        Request $request,
+        CacheInterface $cache): JsonResponse
     {
-        $serviceTypes = $repository->findAllActive();
+        $cacheKey = "service_type.get_all";
+
+        $serviceTypes = $cache->get($cacheKey, function (ItemInterface $item) use ($repository) {
+            $item->expiresAfter(3600);
+
+            return $repository->findAllActive();
+        });
 
         $context = SerializationContext::create()->setGroups(["getServiceType"]);
         $jsonServiceTypes = $serializer->serialize($serviceTypes, 'json', $context);
@@ -62,7 +84,11 @@ class ServiceTypeController extends AbstractController
     }
 
     #[Route('/api/service-type', name: 'service_type.create', methods: ['POST'])]
-    public function createServiceType(Request $request, EntityManagerInterface $entityManager, SerializerInterface $serializer, ValidatorInterface $validator): JsonResponse
+    public function createServiceType(Request $request, 
+        EntityManagerInterface $entityManager, 
+        SerializerInterface $serializer, 
+        ValidatorInterface $validator,
+        CacheInterface $cache): JsonResponse
     {
         /** @var ServiceTypeCreationRequestModel $requestModel */
         $requestModel = $serializer->deserialize(
@@ -106,13 +132,21 @@ class ServiceTypeController extends AbstractController
         $entityManager->persist($serviceType);
         $entityManager->flush();
         
+        $cache->delete("service_type.get_all");
+
         $context = SerializationContext::create()->setGroups(["getServiceType"]);
         $jsonServiceType = $serializer->serialize($serviceType, 'json', $context);
         return new JsonResponse($jsonServiceType, Response::HTTP_CREATED, [], true);
     }
 
     #[Route('/api/service-type/{id}', name: 'service_type.update', methods: ['PATCH'])]
-public function updateServiceType(int $id, Request $request, ServiceTypeRepository $repository, EntityManagerInterface $entityManager, SerializerInterface $serializer, ValidatorInterface $validator): JsonResponse
+public function updateServiceType(int $id, 
+    Request $request, 
+    ServiceTypeRepository $repository, 
+    EntityManagerInterface $entityManager, 
+    SerializerInterface $serializer, 
+    ValidatorInterface $validator,
+    CacheInterface $cache): JsonResponse
 {
     $serviceType = $repository->findActive($id);
     if (!$serviceType) {
@@ -163,21 +197,28 @@ public function updateServiceType(int $id, Request $request, ServiceTypeReposito
     $entityManager->persist($serviceType);
     $entityManager->flush();
 
+    $cache->delete("service_type.get/{$id}");
+    $cache->delete("service_type.get_all");
+
     $context = SerializationContext::create()->setGroups(["getServiceType"]);
     $jsonServiceType = $serializer->serialize($serviceType, 'json', $context);
     return new JsonResponse($jsonServiceType, Response::HTTP_OK, [], true);
 }
 
     #[Route('/api/service-type/{id}', name: 'service_type.delete', methods: ['DELETE'])]
-    public function deleteServiceType(int $id, ServiceTypeRepository $repository, EntityManagerInterface $entityManager): JsonResponse
+    public function deleteServiceType(int $id, 
+        ServiceTypeRepository $serviceTypeRepository,
+        AppointmentRepository $appointmentRepository,
+        EntityManagerInterface $entityManager,
+        CacheInterface $cache): JsonResponse
     {
-        $serviceType = $repository->findActive($id);
+        $serviceType = $serviceTypeRepository->findActive($id);
 
         if (!$serviceType) {
             return new JsonResponse(null, Response::HTTP_NOT_FOUND);
         }
 
-        $appointments = $entityManager->getRepository(Appointment::class)->findBy(['serviceType' => $serviceType]);
+        $appointments = $appointmentRepository->findBy(['serviceType' => $serviceType]);
 
         foreach($appointments as $appointment) {
             $appointment->setStatus(false);
@@ -185,6 +226,17 @@ public function updateServiceType(int $id, Request $request, ServiceTypeReposito
 
         $serviceType->setStatus(false);
         $entityManager->flush();
+
+        if (count($appointments) > 0) {
+            $cache->delete("appointment.get_all");
+
+            foreach($appointments as $appointment) {
+                $cache->delete("appointment.get/{$appointment->getId()}");
+            }
+        }
+
+        $cache->delete("service_type.get/{$id}");
+        $cache->delete("service_type.get_all");
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
