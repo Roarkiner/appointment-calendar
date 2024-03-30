@@ -13,13 +13,25 @@ use Doctrine\ORM\EntityManagerInterface;
 use JMS\Serializer\SerializerInterface;
 use JMS\Serializer\SerializationContext;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
 class SlotController extends AbstractController
 {
     #[Route('/api/slot/{id}', name: 'slot.get', methods: ['GET'])]
-    public function getSlot(int $id, SlotRepository $repository, SerializerInterface $serializer, Request $request): JsonResponse
+    public function getSlot(int $id, 
+        SlotRepository $repository, 
+        SerializerInterface $serializer, 
+        Request $request,
+        CacheInterface $cache): JsonResponse
     {
-        $slot = $repository->findActive($id);
+        $cacheKey = "slot.get/{$id}";
+
+        $slot = $cache->get($cacheKey, function (ItemInterface $item) use ($repository, $id) {
+            $item->expiresAfter(3600);
+
+            return $repository->findActive($id);
+        });
 
         if (!$slot || !$slot->isStatus()) {
             return new JsonResponse(null, Response::HTTP_NOT_FOUND);
@@ -39,9 +51,18 @@ class SlotController extends AbstractController
     }
 
     #[Route('/api/slot', name: 'slot.get_all', methods: ['GET'])]
-    public function getAllSlots(SerializerInterface $serializer, SlotRepository $repository, Request $request): JsonResponse
+    public function getAllSlots(SerializerInterface $serializer, 
+        SlotRepository $repository, 
+        Request $request,
+        CacheInterface $cache): JsonResponse
     {
-        $slots = $repository->findAllActive();
+        $cacheKey = "slot.get_all";
+
+        $slots = $cache->get($cacheKey, function (ItemInterface $item) use ($repository) {
+            $item->expiresAfter(3600);
+
+            return $repository->findAllActive();
+        });
 
         $context = SerializationContext::create()->setGroups(["getSlot"]);
         $jsonSlots = $serializer->serialize($slots, 'json', $context);
@@ -61,7 +82,8 @@ class SlotController extends AbstractController
         EntityManagerInterface $entityManager,
         SlotRepository $slotRepository,
         SerializerInterface $serializer, 
-        ValidatorInterface $validator): JsonResponse
+        ValidatorInterface $validator,
+        CacheInterface $cache): JsonResponse
     {
         /** @var Slot $newSlot  */
         $newSlot  = $serializer->deserialize(
@@ -100,6 +122,14 @@ class SlotController extends AbstractController
         $entityManager->persist($newSlot);
         $entityManager->flush();
         
+        $cache->delete("slot.get_all");
+
+        if (count($overlappingSlots) > 0) {
+            foreach($overlappingSlots as $overlap) {
+                $cache->delete("slot.get/{$overlap->getId()}");
+            }
+        }
+
         $context = SerializationContext::create()->setGroups(["getSlot"]);
         $jsonSlot = $serializer->serialize($newSlot, 'json', $context);
         $responseMessage = [
@@ -115,7 +145,8 @@ class SlotController extends AbstractController
         SlotRepository $slotRepository, 
         EntityManagerInterface $entityManager, 
         SerializerInterface $serializer, 
-        ValidatorInterface $validator): JsonResponse
+        ValidatorInterface $validator,
+        CacheInterface $cache): JsonResponse
     {
         $existingSlot = $slotRepository->findActive($id);
         if (!$existingSlot) {
@@ -161,6 +192,15 @@ class SlotController extends AbstractController
         $entityManager->persist($existingSlot);
         $entityManager->flush();
 
+        $cache->delete("slot.get_all");
+        $cache->delete("slot.get/{$id}");
+
+        if (count($overlappingSlots) > 0) {
+            foreach($overlappingSlots as $overlap) {
+                $cache->delete("slot.get/{$overlap->getId()}");
+            }
+        }
+
         $context = SerializationContext::create()->setGroups(["getSlot"]);
         $jsonSlot = $serializer->serialize($existingSlot, 'json', $context);
         $responseMessage = [
@@ -171,7 +211,10 @@ class SlotController extends AbstractController
     }
 
     #[Route('/api/slot/{id}', name: 'slot.delete', methods: ['DELETE'])]
-    public function deleteSlot(int $id, SlotRepository $repository, EntityManagerInterface $entityManager): JsonResponse
+    public function deleteSlot(int $id, 
+        SlotRepository $repository, 
+        EntityManagerInterface $entityManager,
+        CacheInterface $cache): JsonResponse
     {
         $slot = $repository->findActive($id);
 
@@ -181,6 +224,9 @@ class SlotController extends AbstractController
 
         $slot->setStatus(false);
         $entityManager->flush();
+
+        $cache->delete("slot.get_all");
+        $cache->delete("slot.get/{$id}");
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
