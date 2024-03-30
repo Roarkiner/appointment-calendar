@@ -15,8 +15,10 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use JMS\Serializer\SerializationContext;
+use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Component\Mime\Email;
 
 class UserController extends AbstractController
 {
@@ -75,8 +77,12 @@ class UserController extends AbstractController
         UserPasswordHasherInterface $passwordHasher, 
         SerializerInterface $serializer, 
         JWTTokenManagerInterface $tokenManager, 
-        ValidatorInterface $validator): JsonResponse
+        ValidatorInterface $validator, 
+        MailerInterface $mailer): JsonResponse
     {
+        /**
+         * @var User $user
+         */
         $user = $serializer->deserialize(
             $request->getContent(),
             User::class,
@@ -95,17 +101,26 @@ class UserController extends AbstractController
         
         $entityManager->persist($user);
         $entityManager->flush();
-
+        
+        $email = (new Email())
+        ->from('emailerdemo8@gmail.com')
+        ->to($user->getEmail())
+        ->subject('You account was created')
+        ->html("<p>Hello, {$user->getFirstname()}</p>
+        <p>Your account was succefully created.</p>");
+    
+        $mailer->send($email);
+        
         $token = $tokenManager->create($user);
-
+        
         return new JsonResponse($token, Response::HTTP_CREATED, [], true);
     }
-
+    
     #[Route('/api/user/{id}', name: 'user.delete', methods: ['DELETE'])]
     public function deactivateUser(int $id, 
-        UserRepository $userRepository, 
-        EntityManagerInterface $entityManager,
-        CacheInterface $cache): JsonResponse
+    UserRepository $userRepository, 
+    EntityManagerInterface $entityManager,
+    CacheInterface $cache): JsonResponse
     {
         $user = $userRepository->findActive($id);
 

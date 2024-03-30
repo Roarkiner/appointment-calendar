@@ -69,4 +69,22 @@ class AppointmentRepository extends ServiceEntityRepository
 
         return count($result) > 0;
     }
+
+    public function findAppointmentsInNext24Hours(): array
+    {
+        $now = new \DateTime();
+        
+        $startTime = (clone $now)->modify('+24 hours');
+    
+        $endTime = (clone $now)->modify('+24 hours 15 minutes');
+        
+        $qb = $this->createQueryBuilder('e');
+    
+        $qb->where('e.startDate >= :startTime')
+        ->andWhere('e.startDate <= :endTime')
+        ->setParameter('startTime', $startTime)
+        ->setParameter('endTime', $endTime);
+        
+        return $qb->getQuery()->getResult();
+    }
 }
