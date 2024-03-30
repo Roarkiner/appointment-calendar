@@ -226,7 +226,8 @@ public function updateServiceType(int $id,
 
         $serviceType->setStatus(false);
         $entityManager->flush();
-
+        
+        //Set status of all appointments related to this service type to false
         if (count($appointments) > 0) {
             $cache->delete("appointment.get_all");
 

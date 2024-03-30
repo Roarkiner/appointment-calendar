@@ -104,6 +104,7 @@ class SlotController extends AbstractController
             return new JsonResponse(['errors' => $messages], Response::HTTP_BAD_REQUEST);
         }
 
+        //If one or multiple slots overlap with the new one, they all fuse together
         $mergedSlotIds = [];
 
         $overlappingSlots = $slotRepository->findOverlappingSlots($newSlot->getStartDate(), $newSlot->getEndDate());
@@ -174,6 +175,7 @@ class SlotController extends AbstractController
             return new JsonResponse(['errors' => $messages], Response::HTTP_BAD_REQUEST);
         }
 
+        //If one or multiple slots overlap with the modified one, they all fuse together
         $mergedSlotIds = [];
 
         $overlappingSlots = $slotRepository->findOverlappingSlots($existingSlot->getStartDate(), $existingSlot->getEndDate());

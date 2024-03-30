@@ -111,23 +111,27 @@ class AppointmentController extends AbstractController
             return new JsonResponse(['errors' => $messages], Response::HTTP_BAD_REQUEST);
         }
 
+        //Check if one of multiple appointment already exist for the period of teh new appointment
         $doesOverlap = $appointmentRepository->doesAppointmentOverlap($appointment->getStartDate(), $appointment->getEndDate());
         if ($doesOverlap) {
             return new JsonResponse(['errors' => 'Appointment overlaps with another appointment'], Response::HTTP_CONFLICT);
         }
 
+        //Check that the service sype id provided exists
         $content = $request->toArray();
         
         $serviceType = $serviceTypeRepository->findActive($content['service_type_id'] ?? 0);
         if (!$serviceType) {
             return new JsonResponse(['errors' => 'ServiceType not found or is inactive'], Response::HTTP_BAD_REQUEST);
         }
-        
+
+        //Check that the user id provided exists
         $user = $userRepository->findActive($content['user_id'] ?? 0);
         if (!$user) {
             return new JsonResponse(['errors' => 'User not found or is inactive'], Response::HTTP_BAD_REQUEST);
         }
         
+        //Check that the appointment is created inside an existing slot
         $slot = $slotRepository->findValidSlotForAppointment($appointment->getStartDate(), $appointment->getEndDate());
         if (!$slot) {
             return new JsonResponse(['errors' => 'The appointment should be within a valid slot'], Response::HTTP_BAD_REQUEST);
@@ -193,6 +197,7 @@ class AppointmentController extends AbstractController
             return new JsonResponse(['errors' => $messages], Response::HTTP_BAD_REQUEST);
         }
 
+        //Check if one of multiple appointment already exist for the period of teh new appointment
         $doesOverlap = $appointmentRepository->doesAppointmentOverlap($appointment->getStartDate(), $appointment->getEndDate(), $appointment->getId());
         if ($doesOverlap) {
             return new JsonResponse(['errors' => 'Appointment overlaps with another appointment'], Response::HTTP_CONFLICT);
@@ -204,6 +209,7 @@ class AppointmentController extends AbstractController
 
         if (isset($content['service_type_id']))
         {
+            //Check that the service sype id provided exists
             $serviceType = $serviceTypeRepository->findActive($content['service_type_id'] ?? 0);
             if (!$serviceType) {
                 return new JsonResponse(['errors' => 'ServiceType not found or is inactive'], Response::HTTP_BAD_REQUEST);
@@ -214,12 +220,14 @@ class AppointmentController extends AbstractController
 
         if (isset($content['user_id']))
         {
+            //Check that the user id provided exists
             $user = $userRepository->findActive($content['user_id'] ?? 0);
             if (!$user) {
                 return new JsonResponse(['errors' => 'User not found or is inactive'], Response::HTTP_BAD_REQUEST);
             }
         }
-        
+
+        //Check that the appointment is created inside an existing slot
         $slot = $slotRepository->findValidSlotForAppointment($appointment->getStartDate(), $appointment->getEndDate());
         if (!$slot) {
             return new JsonResponse(['errors' => 'The appointment should be within a valid slot'], Response::HTTP_BAD_REQUEST);

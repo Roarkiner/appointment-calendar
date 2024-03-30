@@ -144,6 +144,7 @@ class UserController extends AbstractController
 
             $cache->delete("user.get/{$id}");
 
+            //Set status of all appointments related to this user to false
             if (count($userAppointments) > 0) {
                 $cache->delete("appointment.get_all");
     

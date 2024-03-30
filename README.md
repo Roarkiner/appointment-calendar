@@ -8,7 +8,6 @@ Ce projet contient une API Symfony permettant de gérer des rendez-vous (par exe
 		- [Prérequis](#prérequis)
 		- [Configuration](#configuration)
 	- [Fonctionnalités](#fonctionnalités)
-- 
 
 ## Backend (API)
 
