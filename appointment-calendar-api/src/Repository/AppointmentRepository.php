@@ -38,6 +38,8 @@ class AppointmentRepository extends ServiceEntityRepository
     {
         $qb = $this->createQueryBuilder('e')
             ->where('e.status = :status')
+            ->leftJoin('e.serviceType', 'service_type')
+            ->addSelect('service_type')  
             ->setParameter('status', true);
 
         $query = $qb->getQuery();
