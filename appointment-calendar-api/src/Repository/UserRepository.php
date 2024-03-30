@@ -50,4 +50,17 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
 
         return $query->getOneOrNullResult();
     }
+
+    public function findActiveWithAppointments($id): ?User
+    {
+        $queryBuilder = $this->createQueryBuilder('e')
+        ->where('e.id = :id')
+        ->andWhere('e.status = :status')
+        ->leftJoin('e.appointments', 'appointments')
+        ->addSelect('appointments')
+        ->setParameter('id', $id)
+        ->setParameter('status', true);
+
+        return $queryBuilder->getQuery()->getOneOrNullResult();
+    }
 }

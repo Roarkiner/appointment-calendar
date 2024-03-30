@@ -17,11 +17,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['getUserInfos', 'getAppointment'])]
+    #[Groups(['getUserInfos', 'getAppointment', 'getUser'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180)]
-    #[Groups(['getUserInfos', 'getAppointment'])]
+    #[Groups(['getUserInfos', 'getAppointment', 'getUser'])]
     private ?string $email = null;
 
     /**
@@ -37,14 +37,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $password = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['getUserInfos', 'getAppointment'])]
+    #[Groups(['getUserInfos', 'getAppointment', 'getUser'])]
     private ?string $lastname = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['getUserInfos', 'getAppointment'])]
+    #[Groups(['getUserInfos', 'getAppointment', 'getUser'])]
     private ?string $firstname = null;
 
     #[ORM\OneToMany(targetEntity: Appointment::class, mappedBy: 'user', orphanRemoval: true)]
+    #[Groups(['getUser'])]
     private Collection $appointments;
 
     #[ORM\Column]

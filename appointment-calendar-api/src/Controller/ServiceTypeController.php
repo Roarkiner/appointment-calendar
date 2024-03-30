@@ -232,6 +232,7 @@ public function updateServiceType(int $id,
 
             foreach($appointments as $appointment) {
                 $cache->delete("appointment.get/{$appointment->getId()}");
+                $cache->delete("user.get/{$appointment->getUser()->getId()}");
             }
         }
 

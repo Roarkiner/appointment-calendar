@@ -15,11 +15,11 @@ class Appointment
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['getAppointment'])]
+    #[Groups(['getAppointment', 'getUser'])]
     private ?int $id = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    #[Groups(['getAppointment'])]
+    #[Groups(['getAppointment', 'getUser'])]
     #[Type("DateTime<'Y-m-d H:i'>")]
     #[Constraints\NotNull(message: "Start date cannot be null.")]
     #[Constraints\GreaterThan('now', message: "Start date must be in the future.")]
@@ -27,7 +27,7 @@ class Appointment
     private ?\DateTimeInterface $startDate = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    #[Groups(['getAppointment'])]
+    #[Groups(['getAppointment', 'getUser'])]
     #[Type("DateTime<'Y-m-d H:i'>")]
     #[Constraints\NotNull(message: "End date cannot be null.")]
     #[Constraints\Expression(
@@ -39,7 +39,7 @@ class Appointment
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(['getAppointment'])]
+    #[Groups(['getAppointment', 'getUser'])]
     private ?ServiceType $serviceType = null;
 
     #[ORM\ManyToOne(inversedBy: 'appointments')]

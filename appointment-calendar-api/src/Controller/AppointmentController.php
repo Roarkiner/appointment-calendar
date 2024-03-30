@@ -140,6 +140,7 @@ class AppointmentController extends AbstractController
         $entityManager->flush();
 
         $cache->delete("appointment.get_all");
+        $cache->delete("user.get/{$appointment->getUser()->getId()}");
         
         $context = SerializationContext::create()->setGroups(["getAppointment"]);
         $jsonAppointment = $serializer->serialize($appointment, 'json', $context);
@@ -232,6 +233,7 @@ class AppointmentController extends AbstractController
         
         $cache->delete("appointment.get_all");
         $cache->delete("appointment.get/{$id}");
+        $cache->delete("user.get/{$appointment->getUser()->getId()}");
 
         $context = SerializationContext::create()->setGroups(["getAppointment"]);
         $jsonAppointment = $serializer->serialize($appointment, 'json', $context);
@@ -255,7 +257,8 @@ class AppointmentController extends AbstractController
 
         $cache->delete("appointment.get_all");
         $cache->delete("appointment.get/{$id}");
-        
+        $cache->delete("user.get/{$appointment->getUser()->getId()}");
+
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 }

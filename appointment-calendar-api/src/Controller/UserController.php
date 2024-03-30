@@ -15,6 +15,8 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use JMS\Serializer\SerializationContext;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
 class UserController extends AbstractController
 {
@@ -28,6 +30,42 @@ class UserController extends AbstractController
         $jsonCurrentUser = $serializer->serialize($currentUser, 'json', $context);
 
         return new JsonResponse($jsonCurrentUser, Response::HTTP_OK, [], true);
+    }
+
+    #[Route('/api/user/{id}', name: 'user.get', methods:['GET'])]
+    public function getUserById(int $id,
+        UserRepository $userRepository,
+        SerializerInterface $serializer,
+        CacheInterface $cache,
+        Request $request): JsonResponse
+    {
+        $cacheKey = "user.get/{$id}";
+
+        $user = $cache->get($cacheKey, function (ItemInterface $item) use ($userRepository, $id) {
+            $item->expiresAfter(3600);
+
+            return $userRepository->findActiveWithAppointments($id);
+        });
+
+        $currentUser = $this->getUser();
+
+        if (in_array("ROLE_ADMIN", $currentUser->getRoles()) || $user->getEmail() == $currentUser->getUserIdentifier())
+        {
+            $context = SerializationContext::create()->setGroups(["getUser"])->setSerializeNull(true);
+
+            $jsonCurrentUser = $serializer->serialize($user, 'json', $context);
+
+            //Client-side cache
+            $etag = md5($jsonCurrentUser);
+
+            if ($request->headers->get('If-None-Match') === $etag) {
+                return new JsonResponse(null, Response::HTTP_NOT_MODIFIED);
+            }
+
+            return new JsonResponse($jsonCurrentUser, Response::HTTP_OK, ['ETag' => $etag], true);
+        } else {
+            return new JsonResponse(null, Response::HTTP_UNAUTHORIZED);
+        }
     }
 
     #[Route('/api/register', name: 'user.register', methods: ['POST'])]
@@ -64,16 +102,21 @@ class UserController extends AbstractController
     }
 
     #[Route('/api/user/{id}', name: 'user.delete', methods: ['DELETE'])]
-    public function deactivateUser(int $id, UserRepository $userRepository, EntityManagerInterface $entityManager): JsonResponse
+    public function deactivateUser(int $id, 
+        UserRepository $userRepository, 
+        EntityManagerInterface $entityManager,
+        CacheInterface $cache): JsonResponse
     {
-        $user = $userRepository->find($id);
+        $user = $userRepository->findActive($id);
 
         if (!$user)
         {
             return new JsonResponse(null, Response::HTTP_NOT_FOUND);
         }
 
-        foreach ($user->getAppointments() as $appointment) {
+        $userAppointments = $user->getAppointments();
+
+        foreach ($userAppointments as $appointment) {
             $appointment->setStatus(false);
         }
 
@@ -83,6 +126,16 @@ class UserController extends AbstractController
         {
             $user->setStatus(false);
             $entityManager->flush();
+
+            $cache->delete("user.get/{$id}");
+
+            if (count($userAppointments) > 0) {
+                $cache->delete("appointment.get_all");
+    
+                foreach($userAppointments as $appointment) {
+                    $cache->delete("appointment.get/{$appointment->getId()}");
+                }
+            }
             return new JsonResponse(null, Response::HTTP_NO_CONTENT);
         } else {
             return new JsonResponse(null, Response::HTTP_UNAUTHORIZED);
