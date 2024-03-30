@@ -37,4 +37,17 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->getEntityManager()->persist($user);
         $this->getEntityManager()->flush();
     }
+
+    public function findActive($id): ?User
+    {
+        $qb = $this->createQueryBuilder('e')
+            ->where('e.id = :id')
+            ->andWhere('e.status = :status')
+            ->setParameter('id', $id)
+            ->setParameter('status', true);
+
+        $query = $qb->getQuery();
+
+        return $query->getOneOrNullResult();
+    }
 }

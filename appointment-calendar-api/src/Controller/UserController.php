@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use JMS\Serializer\SerializerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
@@ -63,11 +64,17 @@ class UserController extends AbstractController
     }
 
     #[Route('/api/user/{id}', name: 'user.delete', methods: ['DELETE'])]
-    public function deactivateUser(User $user, EntityManagerInterface $entityManager): JsonResponse
+    public function deactivateUser(int $id, UserRepository $userRepository, EntityManagerInterface $entityManager): JsonResponse
     {
+        $user = $userRepository->find($id);
+
         if (!$user)
         {
             return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+        }
+
+        foreach ($user->getAppointments() as $appointment) {
+            $appointment->setStatus(false);
         }
 
         $currentUser = $this->getUser();

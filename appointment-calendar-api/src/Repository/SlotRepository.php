@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Slot;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\NonUniqueResultException;
 
 /**
  * @extends ServiceEntityRepository<Slot>
@@ -43,5 +44,24 @@ class SlotRepository extends ServiceEntityRepository
         $query = $qb->getQuery();
 
         return $query->getResult();
+    }
+
+    public function findValidSlotForAppointment(\DateTimeInterface $appointmentStartDate, \DateTimeInterface $appointmentEndDate): ?Slot
+    {
+        $qb = $this->createQueryBuilder('slot');
+
+        try {
+            $slot = $qb->where('slot.startDate <= :appointmentStartDate')
+                       ->andWhere('slot.endDate >= :appointmentEndDate')
+                       ->andWhere('slot.status = true')
+                       ->setParameter('appointmentStartDate', $appointmentStartDate)
+                       ->setParameter('appointmentEndDate', $appointmentEndDate)
+                       ->getQuery()
+                       ->getOneOrNullResult();
+        } catch (NonUniqueResultException) {
+            return null;
+        }
+
+        return $slot;
     }
 }

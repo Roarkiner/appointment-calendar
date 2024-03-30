@@ -44,7 +44,7 @@ class SlotController extends AbstractController
     #[Route('/api/slot', name: 'slot.create', methods: ['POST'])]
     public function createSlot(Request $request, EntityManagerInterface $entityManager, SerializerInterface $serializer, ValidatorInterface $validator): JsonResponse
     {
-        /** @var Slot $requestModel */
+        /** @var Slot $slot */
         $slot = $serializer->deserialize(
             $request->getContent(),
             Slot::class, 
@@ -100,6 +100,7 @@ class SlotController extends AbstractController
             return new JsonResponse(['errors' => $messages], Response::HTTP_BAD_REQUEST);
         }
 
+        $entityManager->persist($slot);
         $entityManager->flush();
 
         $context = SerializationContext::create()->setGroups(["getSlot"]);

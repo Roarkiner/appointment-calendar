@@ -1,0 +1,211 @@
+<?php
+
+namespace App\Controller;
+
+use App\Entity\Appointment;
+use App\Repository\AppointmentRepository;
+use App\Repository\ServiceTypeRepository;
+use App\Repository\SlotRepository;
+use App\Repository\UserRepository;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Routing\Attribute\Route;
+use Doctrine\ORM\EntityManagerInterface;
+use JMS\Serializer\SerializerInterface;
+use JMS\Serializer\SerializationContext;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+
+class AppointmentController extends AbstractController
+{
+    #[Route('/api/appointment/{id}', name: 'appointment.get', methods: ['GET'])]
+    public function getAppointment(int $id, AppointmentRepository $repository, SerializerInterface $serializer): JsonResponse
+    {
+        $appointment = $repository->findActive($id);
+
+        if (!$appointment || !$appointment->isStatus()) {
+            return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+        }
+
+        $context = SerializationContext::create()->setGroups(["getAppointment"]);
+        $jsonAppointment = $serializer->serialize($appointment, 'json', $context);
+        return new JsonResponse($jsonAppointment, Response::HTTP_OK, [], true);
+
+    }
+
+    #[Route('/api/appointment', name: 'appointment.get_all', methods: ['GET'])]
+    public function getAllAppointments(SerializerInterface $serializer, AppointmentRepository $repository): JsonResponse
+    {
+        $appointments = $repository->findAllActive();
+
+        $context = SerializationContext::create()->setGroups(["getAppointment"]);
+        $jsonAppointments = $serializer->serialize($appointments, 'json', $context);
+        return new JsonResponse($jsonAppointments, Response::HTTP_OK, [], true);
+    }
+
+    #[Route('/api/appointment', name: 'appointment.create', methods: ['POST'])]
+    public function createAppointment(Request $request, 
+        EntityManagerInterface $entityManager, 
+        SerializerInterface $serializer, 
+        ValidatorInterface $validator,
+        AppointmentRepository $appointmentRepository,
+        UserRepository $userRepository, 
+        ServiceTypeRepository $serviceTypeRepository,
+        SlotRepository $slotRepository): JsonResponse
+    {
+        /** @var Appointment $appointment */
+        $appointment = $serializer->deserialize(
+            $request->getContent(),
+            Appointment::class, 
+            'json'
+        );
+        
+        $appointment->setStatus(true);
+    
+        $errors = $validator->validate($appointment);
+        
+        if (count($errors) > 0) {
+            $messages = [];
+            foreach ($errors as $error) {
+                $messages[] = $error->getMessage();
+            }
+            return new JsonResponse(['errors' => $messages], Response::HTTP_BAD_REQUEST);
+        }
+
+        $doesOverlap = $appointmentRepository->doesAppointmentOverlap($appointment->getStartDate(), $appointment->getEndDate());
+        if ($doesOverlap) {
+            return new JsonResponse(['errors' => 'Appointment overlaps with another appointment'], Response::HTTP_CONFLICT);
+        }
+
+        $content = $request->toArray();
+        
+        $serviceType = $serviceTypeRepository->findActive($content['service_type_id'] ?? 0);
+        if (!$serviceType) {
+            return new JsonResponse(['errors' => 'ServiceType not found or is inactive'], Response::HTTP_BAD_REQUEST);
+        }
+        
+        $user = $userRepository->findActive($content['user_id'] ?? 0);
+        if (!$user) {
+            return new JsonResponse(['errors' => 'User not found or is inactive'], Response::HTTP_BAD_REQUEST);
+        }
+        
+        $slot = $slotRepository->findValidSlotForAppointment($appointment->getStartDate(), $appointment->getEndDate());
+        if (!$slot) {
+            return new JsonResponse(['errors' => 'The appointment should be within a valid slot'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $appointment->setServiceType($serviceType)
+        ->setUser($user);
+
+        $entityManager->persist($appointment);
+        $entityManager->flush();
+        
+        $context = SerializationContext::create()->setGroups(["getAppointment"]);
+        $jsonAppointment = $serializer->serialize($appointment, 'json', $context);
+        return new JsonResponse($jsonAppointment, Response::HTTP_CREATED, [], true);
+    }
+
+    #[Route('/api/appointment/{id}', name: 'appointment.update', methods: ['PATCH'])]
+    public function updateAppointment(int $id, 
+        Request $request, 
+        AppointmentRepository $repository, 
+        EntityManagerInterface $entityManager, 
+        SerializerInterface $serializer, 
+        ValidatorInterface $validator, 
+        AppointmentRepository $appointmentRepository,
+        UserRepository $userRepository, 
+        ServiceTypeRepository $serviceTypeRepository,
+        SlotRepository $slotRepository): JsonResponse
+    {
+        $appointment = $repository->findActive($id);
+        if (!$appointment) {
+            return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+        }
+
+        $currentUser = $this->getUser();
+
+        if (in_array("ROLE_ADMIN", $currentUser->getRoles()) && $currentUser->getUserIdentifier() != $appointment->getUser()->getEmail())
+        {
+            return new JsonResponse(null, Response::HTTP_UNAUTHORIZED);
+        }
+
+        /** @var Appointment $requestAppointment */
+        $requestAppointment = $serializer->deserialize(
+            $request->getContent(),
+            Appointment::class,
+            'json'
+        );
+        
+        $appointment->setStartDate($requestAppointment->getStartDate() ?? $appointment->getStartDate())
+        ->setEndDate($requestAppointment->getEndDate() ?? $appointment->getEndDate())
+        ->setStatus(true);
+
+        $errors = $validator->validate($appointment);
+        
+        if (count($errors) > 0) {
+            $messages = [];
+            foreach ($errors as $error) {
+                $messages[] = $error->getMessage();
+            }
+            return new JsonResponse(['errors' => $messages], Response::HTTP_BAD_REQUEST);
+        }
+
+        $doesOverlap = $appointmentRepository->doesAppointmentOverlap($appointment->getStartDate(), $appointment->getEndDate(), $appointment->getId());
+        if ($doesOverlap) {
+            return new JsonResponse(['errors' => 'Appointment overlaps with another appointment'], Response::HTTP_CONFLICT);
+        }
+
+        $content = $request->toArray();
+
+        $serviceType = $appointment->getServiceType();
+
+        if (isset($content['service_type_id']))
+        {
+            $serviceType = $serviceTypeRepository->findActive($content['service_type_id'] ?? 0);
+            if (!$serviceType) {
+                return new JsonResponse(['errors' => 'ServiceType not found or is inactive'], Response::HTTP_BAD_REQUEST);
+            }
+        }
+        
+        $user = $appointment->getUser();
+
+        if (isset($content['user_id']))
+        {
+            $user = $userRepository->findActive($content['user_id'] ?? 0);
+            if (!$user) {
+                return new JsonResponse(['errors' => 'User not found or is inactive'], Response::HTTP_BAD_REQUEST);
+            }
+        }
+        
+        $slot = $slotRepository->findValidSlotForAppointment($appointment->getStartDate(), $appointment->getEndDate());
+        if (!$slot) {
+            return new JsonResponse(['errors' => 'The appointment should be within a valid slot'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $appointment->setUser($user)
+        ->setServiceType($serviceType);
+
+        $entityManager->persist($appointment);
+        $entityManager->flush();
+
+        $context = SerializationContext::create()->setGroups(["getAppointment"]);
+        $jsonAppointment = $serializer->serialize($appointment, 'json', $context);
+        return new JsonResponse($jsonAppointment, Response::HTTP_OK, [], true);
+    }
+
+    #[Route('/api/appointment/{id}', name: 'appointment.delete', methods: ['DELETE'])]
+    public function deleteAppointment(int $id, AppointmentRepository $repository, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $appointment = $repository->findActive($id);
+
+        if (!$appointment) {
+            return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+        }
+
+        $appointment->setStatus(false);
+        $entityManager->flush();
+
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+    }
+}

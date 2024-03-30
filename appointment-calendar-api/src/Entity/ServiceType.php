@@ -12,15 +12,15 @@ class ServiceType
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['getServiceType'])]
+    #[Groups(['getServiceType', 'getAppointment'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['getServiceType'])]
+    #[Groups(['getServiceType', 'getAppointment'])]
     private ?string $name = null;
 
     #[ORM\Column]
-    #[Groups(['getServiceType'])]
+    #[Groups(['getServiceType', 'getAppointment'])]
     private ?\DateInterval $duration = null;
 
     #[ORM\Column]

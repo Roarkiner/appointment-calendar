@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\ServiceType;
+use App\Entity\Appointment;
 use App\Model\ServiceTypeCreationRequestModel;
 use App\Repository\ServiceTypeRepository;
 use DateInterval;
@@ -143,6 +144,7 @@ public function updateServiceType(int $id, Request $request, ServiceTypeReposito
         return new JsonResponse(['errors' => $messages], Response::HTTP_BAD_REQUEST);
     }
 
+    $entityManager->persist($serviceType);
     $entityManager->flush();
 
     $context = SerializationContext::create()->setGroups(["getServiceType"]);
@@ -157,6 +159,12 @@ public function updateServiceType(int $id, Request $request, ServiceTypeReposito
 
         if (!$serviceType) {
             return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+        }
+
+        $appointments = $entityManager->getRepository(Appointment::class)->findBy(['serviceType' => $serviceType]);
+
+        foreach($appointments as $appointment) {
+            $appointment->setStatus(false);
         }
 
         $serviceType->setStatus(false);
