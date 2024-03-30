@@ -21,7 +21,7 @@ use Symfony\Component\Validator\Constraints;
 class ServiceTypeController extends AbstractController
 {
     #[Route('/api/service-type/{id}', name: 'service_type.get', methods: ['GET'])]
-    public function getServiceType(int $id, ServiceTypeRepository $repository, SerializerInterface $serializer): JsonResponse
+    public function getServiceType(int $id, ServiceTypeRepository $repository, SerializerInterface $serializer, Request $request): JsonResponse
     {
         $serviceType = $repository->findActive($id);
 
@@ -31,18 +31,34 @@ class ServiceTypeController extends AbstractController
 
         $context = SerializationContext::create()->setGroups(["getServiceType"]);
         $jsonServiceType = $serializer->serialize($serviceType, 'json', $context);
-        return new JsonResponse($jsonServiceType, Response::HTTP_OK, [], true);
+
+        //Client-side cache
+        $etag = md5($jsonServiceType);
+
+        if ($request->headers->get('If-None-Match') === $etag) {
+            return new JsonResponse(null, Response::HTTP_NOT_MODIFIED);
+        }
+        
+        return new JsonResponse($jsonServiceType, Response::HTTP_OK, ['ETag' => $etag], true);
 
     }
 
     #[Route('/api/service-type', name: 'service_type.get_all', methods: ['GET'])]
-    public function getAllServiceTypes(SerializerInterface $serializer, ServiceTypeRepository $repository): JsonResponse
+    public function getAllServiceTypes(SerializerInterface $serializer, ServiceTypeRepository $repository, Request $request): JsonResponse
     {
         $serviceTypes = $repository->findAllActive();
 
         $context = SerializationContext::create()->setGroups(["getServiceType"]);
         $jsonServiceTypes = $serializer->serialize($serviceTypes, 'json', $context);
-        return new JsonResponse($jsonServiceTypes, Response::HTTP_OK, [], true);
+
+        //Client-side cache
+        $etag = md5($jsonServiceTypes);
+
+        if ($request->headers->get('If-None-Match') === $etag) {
+            return new JsonResponse(null, Response::HTTP_NOT_MODIFIED);
+        }
+
+        return new JsonResponse($jsonServiceTypes, Response::HTTP_OK, ['ETag' => $etag], true);
     }
 
     #[Route('/api/service-type', name: 'service_type.create', methods: ['POST'])]

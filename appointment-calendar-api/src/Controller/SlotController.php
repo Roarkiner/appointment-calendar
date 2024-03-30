@@ -17,7 +17,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class SlotController extends AbstractController
 {
     #[Route('/api/slot/{id}', name: 'slot.get', methods: ['GET'])]
-    public function getSlot(int $id, SlotRepository $repository, SerializerInterface $serializer): JsonResponse
+    public function getSlot(int $id, SlotRepository $repository, SerializerInterface $serializer, Request $request): JsonResponse
     {
         $slot = $repository->findActive($id);
 
@@ -27,18 +27,33 @@ class SlotController extends AbstractController
 
         $context = SerializationContext::create()->setGroups(["getSlot"]);
         $jsonSlot = $serializer->serialize($slot, 'json', $context);
-        return new JsonResponse($jsonSlot, Response::HTTP_OK, [], true);
 
+        //Client-side cache
+        $etag = md5($jsonSlot);
+
+        if ($request->headers->get('If-None-Match') === $etag) {
+            return new JsonResponse(null, Response::HTTP_NOT_MODIFIED);
+        }
+
+        return new JsonResponse($jsonSlot, Response::HTTP_OK, ['ETag' => $etag], true);
     }
 
     #[Route('/api/slot', name: 'slot.get_all', methods: ['GET'])]
-    public function getAllSlots(SerializerInterface $serializer, SlotRepository $repository): JsonResponse
+    public function getAllSlots(SerializerInterface $serializer, SlotRepository $repository, Request $request): JsonResponse
     {
         $slots = $repository->findAllActive();
 
         $context = SerializationContext::create()->setGroups(["getSlot"]);
         $jsonSlots = $serializer->serialize($slots, 'json', $context);
-        return new JsonResponse($jsonSlots, Response::HTTP_OK, [], true);
+
+        //Client-side cache
+        $etag = md5($jsonSlots);
+
+        if ($request->headers->get('If-None-Match') === $etag) {
+            return new JsonResponse(null, Response::HTTP_NOT_MODIFIED);
+        }
+
+        return new JsonResponse($jsonSlots, Response::HTTP_OK, ['ETag' => $etag], true);
     }
 
     #[Route('/api/slot', name: 'slot.create', methods: ['POST'])]

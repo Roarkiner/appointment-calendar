@@ -20,7 +20,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class AppointmentController extends AbstractController
 {
     #[Route('/api/appointment/{id}', name: 'appointment.get', methods: ['GET'])]
-    public function getAppointment(int $id, AppointmentRepository $repository, SerializerInterface $serializer): JsonResponse
+    public function getAppointment(int $id, AppointmentRepository $repository, SerializerInterface $serializer, Request $request): JsonResponse
     {
         $appointment = $repository->findActive($id);
 
@@ -30,18 +30,34 @@ class AppointmentController extends AbstractController
 
         $context = SerializationContext::create()->setGroups(["getAppointment"]);
         $jsonAppointment = $serializer->serialize($appointment, 'json', $context);
-        return new JsonResponse($jsonAppointment, Response::HTTP_OK, [], true);
+
+        //Client-side cache
+        $etag = md5($jsonAppointment);
+
+        if ($request->headers->get('If-None-Match') === $etag) {
+            return new JsonResponse(null, Response::HTTP_NOT_MODIFIED);
+        }        
+
+        return new JsonResponse($jsonAppointment, Response::HTTP_OK, ['ETag' => $etag], true);
 
     }
 
     #[Route('/api/appointment', name: 'appointment.get_all', methods: ['GET'])]
-    public function getAllAppointments(SerializerInterface $serializer, AppointmentRepository $repository): JsonResponse
+    public function getAllAppointments(SerializerInterface $serializer, AppointmentRepository $repository, Request $request): JsonResponse
     {
         $appointments = $repository->findAllActive();
 
         $context = SerializationContext::create()->setGroups(["getAppointment"]);
         $jsonAppointments = $serializer->serialize($appointments, 'json', $context);
-        return new JsonResponse($jsonAppointments, Response::HTTP_OK, [], true);
+
+        //Client-side cache
+        $etag = md5($jsonAppointments);
+
+        if ($request->headers->get('If-None-Match') === $etag) {
+            return new JsonResponse(null, Response::HTTP_NOT_MODIFIED);
+        }
+
+        return new JsonResponse($jsonAppointments, Response::HTTP_OK, ['ETag' => $etag], true);
     }
 
     #[Route('/api/appointment', name: 'appointment.create', methods: ['POST'])]
