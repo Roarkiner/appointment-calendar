@@ -16,13 +16,25 @@ use Doctrine\ORM\EntityManagerInterface;
 use JMS\Serializer\SerializerInterface;
 use JMS\Serializer\SerializationContext;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
 class AppointmentController extends AbstractController
 {
     #[Route('/api/appointment/{id}', name: 'appointment.get', methods: ['GET'])]
-    public function getAppointment(int $id, AppointmentRepository $repository, SerializerInterface $serializer, Request $request): JsonResponse
+    public function getAppointment(int $id,
+    AppointmentRepository $repository, 
+    SerializerInterface $serializer, 
+    Request $request, 
+    CacheInterface $cache): JsonResponse
     {
-        $appointment = $repository->findActive($id);
+        $cacheKey = "appointment.get/{$id}";
+
+        $appointment = $cache->get($cacheKey, function (ItemInterface $item) use ($repository, $id) {
+            $item->expiresAfter(3600);
+
+            return $repository->findActive($id);
+        });
 
         if (!$appointment || !$appointment->isStatus()) {
             return new JsonResponse(null, Response::HTTP_NOT_FOUND);
@@ -43,9 +55,18 @@ class AppointmentController extends AbstractController
     }
 
     #[Route('/api/appointment', name: 'appointment.get_all', methods: ['GET'])]
-    public function getAllAppointments(SerializerInterface $serializer, AppointmentRepository $repository, Request $request): JsonResponse
+    public function getAllAppointments(SerializerInterface $serializer, 
+        AppointmentRepository $repository, 
+        Request $request, 
+        CacheInterface $cache): JsonResponse
     {
-        $appointments = $repository->findAllActive();
+        $cacheKey = "appointments.get_all";
+
+        $appointments = $cache->get($cacheKey, function (ItemInterface $item) use ($repository) {
+            $item->expiresAfter(3600);
+
+            return $repository->findAllActive();
+        });
 
         $context = SerializationContext::create()->setGroups(["getAppointment"]);
         $jsonAppointments = $serializer->serialize($appointments, 'json', $context);
@@ -68,7 +89,8 @@ class AppointmentController extends AbstractController
         AppointmentRepository $appointmentRepository,
         UserRepository $userRepository, 
         ServiceTypeRepository $serviceTypeRepository,
-        SlotRepository $slotRepository): JsonResponse
+        SlotRepository $slotRepository, 
+        CacheInterface $cache): JsonResponse
     {
         /** @var Appointment $appointment */
         $appointment = $serializer->deserialize(
@@ -116,6 +138,8 @@ class AppointmentController extends AbstractController
 
         $entityManager->persist($appointment);
         $entityManager->flush();
+
+        $cache->delete("appointment.get_all");
         
         $context = SerializationContext::create()->setGroups(["getAppointment"]);
         $jsonAppointment = $serializer->serialize($appointment, 'json', $context);
@@ -132,7 +156,8 @@ class AppointmentController extends AbstractController
         AppointmentRepository $appointmentRepository,
         UserRepository $userRepository, 
         ServiceTypeRepository $serviceTypeRepository,
-        SlotRepository $slotRepository): JsonResponse
+        SlotRepository $slotRepository, 
+        CacheInterface $cache): JsonResponse
     {
         $appointment = $repository->findActive($id);
         if (!$appointment) {
@@ -204,6 +229,9 @@ class AppointmentController extends AbstractController
 
         $entityManager->persist($appointment);
         $entityManager->flush();
+        
+        $cache->delete("appointment.get_all");
+        $cache->delete("appointment.get/{$id}");
 
         $context = SerializationContext::create()->setGroups(["getAppointment"]);
         $jsonAppointment = $serializer->serialize($appointment, 'json', $context);
@@ -211,7 +239,10 @@ class AppointmentController extends AbstractController
     }
 
     #[Route('/api/appointment/{id}', name: 'appointment.delete', methods: ['DELETE'])]
-    public function deleteAppointment(int $id, AppointmentRepository $repository, EntityManagerInterface $entityManager): JsonResponse
+    public function deleteAppointment(int $id, 
+        AppointmentRepository $repository, 
+        EntityManagerInterface $entityManager, 
+        CacheInterface $cache): JsonResponse
     {
         $appointment = $repository->findActive($id);
 
@@ -222,6 +253,9 @@ class AppointmentController extends AbstractController
         $appointment->setStatus(false);
         $entityManager->flush();
 
+        $cache->delete("appointment.get_all");
+        $cache->delete("appointment.get/{$id}");
+        
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 }
