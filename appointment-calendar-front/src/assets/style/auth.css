@@ -1,0 +1,79 @@
+.return-link {
+    margin-bottom: 1rem;
+    font-size: larger;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+}
+
+.return-link .return-arrow {
+    color: #333;
+    text-decoration: none;
+}
+
+.auth-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: #bff3ff;
+    text-align: center;
+    padding: 50px;
+}
+
+.form-switch-auth {
+    margin-bottom: 1rem;
+    display: flex;
+}
+
+.form-switch-auth button {
+    padding: 0.5rem 1rem;
+    border: 1px solid gray;
+    color: #333;
+    min-width: 180px;
+    font-size: large;
+}
+
+.form-switch-auth button.active {
+    background-color: rgba(140, 140, 240, 0.5);
+}
+
+.separator {
+    display: block;
+    width: 1px;
+    height: 100%;
+    background-color: black;
+    margin: 0 16px;
+}
+
+.auth-container .input-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 360px;
+}
+
+.auth-container .form-group {
+    width: 100%;
+    margin-bottom: 1rem;
+    text-align: left;
+}
+
+.auth-container .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 1.3rem;
+    justify-self: baseline;
+}
+
+.auth-container .form-control {
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 1rem;
+}
+
+.auth-container .btn {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+}
