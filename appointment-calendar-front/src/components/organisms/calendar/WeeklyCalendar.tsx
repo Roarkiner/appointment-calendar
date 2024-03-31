@@ -6,11 +6,11 @@ import ButtonAtom from '../../atoms/shared/ButtonAtom';
 import { startOfWeek, endOfWeek, addWeeks, format, isBefore, startOfDay, setHours, setMinutes } from 'date-fns';
 import React from 'react';
 import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
-import { TimeSlotType } from '../../molecules/calendar/DayColumn';
 import HourScale from '../../molecules/calendar/HourScale';
 import { getAllAppointmentsBetween } from '../../../services/AppointmentService';
 import CalendarLegend from "../../molecules/calendar/CalendarLegend";
-import { convertAppointmentsToTimeSlots } from "../../../services/DateHelper";
+import { convertAppointmentsToTimeSlots, convertSlotsToTimeSlots } from "../../../services/DateHelper";
+import { getAllSlotsBetween } from "../../../services/SlotService";
 
 export enum WeekDays {
     monday = "Lundi",
@@ -26,11 +26,11 @@ const WeeklyCalendar: React.FC = () => {
     const QUARTER_HOUR_HEIGHT = 15;
     const [currentDate, setCurrentDate] = useState(new Date());
     const [appointments, setAppointments] = useState<TimeSlot[]>([]);
+    const [slots, setSlots] = useState<TimeSlot[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchAppointments = async () => {
+    const fetchAppointmentsAndSlots = async () => {
         setLoading(true);
-        
         const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
         const endOfCurrentWeek = endOfWeek(currentDate, { weekStartsOn: 1 });
 
@@ -41,11 +41,16 @@ const WeeklyCalendar: React.FC = () => {
         const fetchedAppointments = await getAllAppointmentsBetween(startDate, endDate);
         const convertedAppointments = convertAppointmentsToTimeSlots(fetchedAppointments);
         setAppointments(convertedAppointments);
+
+        const fetchedSlots = await getAllSlotsBetween(startDate, endDate);
+        const convertedSlots = convertSlotsToTimeSlots(fetchedSlots);
+        setSlots(convertedSlots);
+
         setLoading(false);
     };
 
     useEffect(() => {
-        fetchAppointments();
+        fetchAppointmentsAndSlots();
     }, [currentDate]);
 
     const today = startOfDay(new Date());
@@ -59,11 +64,6 @@ const WeeklyCalendar: React.FC = () => {
     const goToNextWeek = () => {
         setCurrentDate(prevDate => addWeeks(prevDate, 1));
     };
-
-    const slots: TimeSlot[] = [
-        { id: 1, day: WeekDays.monday, type: TimeSlotType.slot, start: 0, end: 20 },
-        { id: 2, day: WeekDays.wednesday, type: TimeSlotType.slot, start: 28, end: 44 },
-    ]
 
     if (loading) return <div>Chargement...</div>;
 
