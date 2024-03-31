@@ -50,7 +50,7 @@ const WeeklyCalendar: React.FC = () => {
 
     return (
         <div>
-            <div className='d-flex justify-content-between'>
+            <div className='d-flex justify-content-evenly'>
                 <h2>Semaine du {format(startOfCurrentWeek, 'PPP')} au {format(endOfCurrentWeek, 'PPP')}</h2>
                 <div>
                     <ButtonAtom className='previous-week' onClick={goToPreviousWeek} disabled={isBefore(startOfCurrentWeek, today)}><IoChevronBack /></ButtonAtom>
