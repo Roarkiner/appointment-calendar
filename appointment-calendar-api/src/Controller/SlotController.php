@@ -14,6 +14,7 @@ use JMS\Serializer\SerializerInterface;
 use JMS\Serializer\SerializationContext;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
 class SlotController extends AbstractController
@@ -54,15 +55,35 @@ class SlotController extends AbstractController
     public function getAllSlots(SerializerInterface $serializer, 
         SlotRepository $repository, 
         Request $request,
-        CacheInterface $cache): JsonResponse
+        TagAwareCacheInterface $cache): JsonResponse
     {
-        $cacheKey = "slot.get_all";
+        $requestStartDate = $request->query->get('start_date');
+        $requestEndDate = $request->query->get('end_date');
+        if ($requestStartDate != null && $requestEndDate != null)
+        {
+            $startDate = new \DateTime($requestStartDate);
+            $endDate = new \DateTime($requestEndDate);
+    
+            $cacheKey = "slot.get_all.{$startDate->format('Y-m-d H:m')}.{$endDate->format('Y-m-d H:m')}";
 
-        $slots = $cache->get($cacheKey, function (ItemInterface $item) use ($repository) {
-            $item->expiresAfter(3600);
+            $slots = $cache->get($cacheKey, function (ItemInterface $item) use ($repository, $startDate, $endDate) {
+                $item->expiresAfter(3600);
+    
+                $item->tag(['slot_get_all']);
+        
+                return $repository->findActiveBetweenDates($startDate, $endDate);
+            });
+        } else {
+            $cacheKey = "slot.get_all";
 
-            return $repository->findAllActive();
-        });
+            $slots = $cache->get($cacheKey, function (ItemInterface $item) use ($repository) {
+                $item->expiresAfter(3600);
+    
+                $item->tag(['slot_get_all']);
+        
+                return $repository->findAllActive();
+            });
+        }
 
         $context = SerializationContext::create()->setGroups(["getSlot"]);
         $jsonSlots = $serializer->serialize($slots, 'json', $context);
@@ -83,7 +104,7 @@ class SlotController extends AbstractController
         SlotRepository $slotRepository,
         SerializerInterface $serializer, 
         ValidatorInterface $validator,
-        CacheInterface $cache): JsonResponse
+        TagAwareCacheInterface $cache): JsonResponse
     {
         /** @var Slot $newSlot  */
         $newSlot  = $serializer->deserialize(
@@ -123,7 +144,7 @@ class SlotController extends AbstractController
         $entityManager->persist($newSlot);
         $entityManager->flush();
         
-        $cache->delete("slot.get_all");
+        $cache->invalidateTags(['slot_get_all']);
 
         if (count($overlappingSlots) > 0) {
             foreach($overlappingSlots as $overlap) {
@@ -147,7 +168,7 @@ class SlotController extends AbstractController
         EntityManagerInterface $entityManager, 
         SerializerInterface $serializer, 
         ValidatorInterface $validator,
-        CacheInterface $cache): JsonResponse
+        TagAwareCacheInterface $cache): JsonResponse
     {
         $existingSlot = $slotRepository->findActive($id);
         if (!$existingSlot) {
@@ -194,7 +215,7 @@ class SlotController extends AbstractController
         $entityManager->persist($existingSlot);
         $entityManager->flush();
 
-        $cache->delete("slot.get_all");
+        $cache->invalidateTags(['slot_get_all']);
         $cache->delete("slot.get/{$id}");
 
         if (count($overlappingSlots) > 0) {
@@ -216,7 +237,7 @@ class SlotController extends AbstractController
     public function deleteSlot(int $id, 
         SlotRepository $repository, 
         EntityManagerInterface $entityManager,
-        CacheInterface $cache): JsonResponse
+        TagAwareCacheInterface $cache): JsonResponse
     {
         $slot = $repository->findActive($id);
 
@@ -227,7 +248,7 @@ class SlotController extends AbstractController
         $slot->setStatus(false);
         $entityManager->flush();
 
-        $cache->delete("slot.get_all");
+        $cache->invalidateTags(['slot_get_all']);
         $cache->delete("slot.get/{$id}");
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);

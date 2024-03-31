@@ -16,6 +16,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use JMS\Serializer\SerializerInterface;
 use JMS\Serializer\SerializationContext;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
@@ -58,15 +59,36 @@ class AppointmentController extends AbstractController
     public function getAllAppointments(SerializerInterface $serializer, 
         AppointmentRepository $repository, 
         Request $request, 
-        CacheInterface $cache): JsonResponse
+        TagAwareCacheInterface $cache): JsonResponse
     {
-        $cacheKey = "appointments.get_all";
+        $requestStartDate = $request->query->get('start_date');
+        $requestEndDate = $request->query->get('end_date');
+        if ($requestStartDate != null && $requestEndDate != null)
+        {
+            $startDate = new \DateTime($requestStartDate);
+            $endDate = new \DateTime($requestEndDate);
+    
+            $cacheKey = "appointment.get_all.{$startDate->format('Y-m-d H:m')}.{$endDate->format('Y-m-d H:m')}";
 
-        $appointments = $cache->get($cacheKey, function (ItemInterface $item) use ($repository) {
-            $item->expiresAfter(3600);
+            $appointments = $cache->get($cacheKey, function (ItemInterface $item) use ($repository, $startDate, $endDate) {
+                $item->expiresAfter(3600);
+    
+                $item->tag(['appointment_get_all']);
+        
+                return $repository->findActiveBetweenDates($startDate, $endDate);
+            });
+        } else {
+            $cacheKey = "appointment.get_all";
 
-            return $repository->findAllActive();
-        });
+            $appointments = $cache->get($cacheKey, function (ItemInterface $item) use ($repository) {
+                $item->expiresAfter(3600);
+    
+                $item->tag(['appointment_get_all']);
+        
+                return $repository->findAllActive();
+            });
+        }
+
 
         $context = SerializationContext::create()->setGroups(["getAppointment"]);
         $jsonAppointments = $serializer->serialize($appointments, 'json', $context);
@@ -90,7 +112,7 @@ class AppointmentController extends AbstractController
         UserRepository $userRepository, 
         ServiceTypeRepository $serviceTypeRepository,
         SlotRepository $slotRepository, 
-        CacheInterface $cache): JsonResponse
+        TagAwareCacheInterface $cache): JsonResponse
     {
         /** @var Appointment $appointment */
         $appointment = $serializer->deserialize(
@@ -143,7 +165,7 @@ class AppointmentController extends AbstractController
         $entityManager->persist($appointment);
         $entityManager->flush();
 
-        $cache->delete("appointment.get_all");
+        $cache->invalidateTags(['appointment_get_all']);
         $cache->delete("user.get/{$appointment->getUser()->getId()}");
         
         $context = SerializationContext::create()->setGroups(["getAppointment"]);
@@ -162,7 +184,7 @@ class AppointmentController extends AbstractController
         UserRepository $userRepository, 
         ServiceTypeRepository $serviceTypeRepository,
         SlotRepository $slotRepository, 
-        CacheInterface $cache): JsonResponse
+        TagAwareCacheInterface $cache): JsonResponse
     {
         $appointment = $repository->findActive($id);
         if (!$appointment) {
@@ -239,7 +261,7 @@ class AppointmentController extends AbstractController
         $entityManager->persist($appointment);
         $entityManager->flush();
         
-        $cache->delete("appointment.get_all");
+        $cache->invalidateTags(['appointment_get_all']);
         $cache->delete("appointment.get/{$id}");
         $cache->delete("user.get/{$appointment->getUser()->getId()}");
 
@@ -252,7 +274,7 @@ class AppointmentController extends AbstractController
     public function deleteAppointment(int $id, 
         AppointmentRepository $repository, 
         EntityManagerInterface $entityManager, 
-        CacheInterface $cache): JsonResponse
+        TagAwareCacheInterface $cache): JsonResponse
     {
         $appointment = $repository->findActive($id);
 
@@ -263,7 +285,7 @@ class AppointmentController extends AbstractController
         $appointment->setStatus(false);
         $entityManager->flush();
 
-        $cache->delete("appointment.get_all");
+        $cache->invalidateTags(['appointment_get_all']);
         $cache->delete("appointment.get/{$id}");
         $cache->delete("user.get/{$appointment->getUser()->getId()}");
 

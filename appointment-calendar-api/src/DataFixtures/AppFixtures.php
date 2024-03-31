@@ -138,9 +138,11 @@ class AppFixtures extends Fixture
 
         $randomHourMinutes = rand(0, 3) * 15;
         $randomStartDate->setTime((int)$randomStartDate->format('H'), $randomHourMinutes, 0);
+        $randomEndDate = clone $randomStartDate;
+        $randomEndDate->add(new DateInterval("PT{$serviceTypeDuration}M"));
 
         $appointment->setStartDate($randomStartDate)
-        ->setEndDate($randomStartDate->add(new DateInterval("PT{$serviceTypeDuration}M")))
+        ->setEndDate($randomEndDate)
         ->setServiceType($randomServiceType)
         ->setUser($user)
         ->setStatus(true);

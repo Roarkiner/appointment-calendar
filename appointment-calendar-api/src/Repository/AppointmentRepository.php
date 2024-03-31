@@ -87,4 +87,20 @@ class AppointmentRepository extends ServiceEntityRepository
         
         return $qb->getQuery()->getResult();
     }
+
+    public function findActiveBetweenDates(\DateTimeInterface $startDate, \DateTimeInterface $endDate): array
+    {
+        $qb = $this->createQueryBuilder('e')
+            ->where('e.status = :status')
+            ->andWhere('e.startDate >= :startDate')
+            ->andWhere('e.endDate <= :endDate')
+            ->leftJoin('e.serviceType', 'service_type')
+            ->addSelect('service_type')  
+            ->orderBy('e.startDate', 'ASC')
+            ->setParameter('status', true)
+            ->setParameter('startDate', $startDate)
+            ->setParameter('endDate', $endDate);
+
+        return $qb->getQuery()->getResult();
+    }
 }

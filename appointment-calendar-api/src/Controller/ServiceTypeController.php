@@ -18,6 +18,7 @@ use JMS\Serializer\SerializationContext;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Validator\Constraints;
 use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
 
@@ -210,7 +211,7 @@ public function updateServiceType(int $id,
         ServiceTypeRepository $serviceTypeRepository,
         AppointmentRepository $appointmentRepository,
         EntityManagerInterface $entityManager,
-        CacheInterface $cache): JsonResponse
+        TagAwareCacheInterface $cache): JsonResponse
     {
         $serviceType = $serviceTypeRepository->findActive($id);
 
@@ -229,7 +230,7 @@ public function updateServiceType(int $id,
         
         //Set status of all appointments related to this service type to false
         if (count($appointments) > 0) {
-            $cache->delete("appointment.get_all");
+            $cache->invalidateTags(['appointment_get_all']);
 
             foreach($appointments as $appointment) {
                 $cache->delete("appointment.get/{$appointment->getId()}");

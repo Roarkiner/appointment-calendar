@@ -80,4 +80,19 @@ class SlotRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getResult();
     }
+
+    
+    public function findActiveBetweenDates(\DateTimeInterface $startDate, \DateTimeInterface $endDate): array
+    {
+        $qb = $this->createQueryBuilder('e')
+            ->where('e.status = :status')
+            ->andWhere('e.startDate >= :startDate')
+            ->andWhere('e.endDate <= :endDate')
+            ->orderBy('e.startDate', 'ASC')
+            ->setParameter('status', true)
+            ->setParameter('startDate', $startDate)
+            ->setParameter('endDate', $endDate);
+
+        return $qb->getQuery()->getResult();
+    }
 }

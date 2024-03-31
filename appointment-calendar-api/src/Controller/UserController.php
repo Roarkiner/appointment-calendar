@@ -17,6 +17,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 use JMS\Serializer\SerializationContext;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Component\Mime\Email;
 
@@ -120,7 +121,7 @@ class UserController extends AbstractController
     public function deactivateUser(int $id, 
     UserRepository $userRepository, 
     EntityManagerInterface $entityManager,
-    CacheInterface $cache): JsonResponse
+    TagAwareCacheInterface $cache): JsonResponse
     {
         $user = $userRepository->findActive($id);
 
@@ -146,7 +147,7 @@ class UserController extends AbstractController
 
             //Set status of all appointments related to this user to false
             if (count($userAppointments) > 0) {
-                $cache->delete("appointment.get_all");
+                $cache->invalidateTags(['appointment_get_all']);
     
                 foreach($userAppointments as $appointment) {
                     $cache->delete("appointment.get/{$appointment->getId()}");
