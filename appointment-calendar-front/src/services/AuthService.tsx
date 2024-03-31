@@ -2,7 +2,6 @@ import { jwtDecode } from "jwt-decode";
 import { api } from "./ApiService";
 import { UserSaveModel } from "../models/UserSaveModel";
 import { saveUser } from "./UserService";
-import { toast } from "react-toastify";
 
 export function isUserAuthenticated(): boolean {
     return getApiToken() !== null;

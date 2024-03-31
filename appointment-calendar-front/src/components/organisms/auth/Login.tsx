@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { loginUser } from "../../services/AuthService";
+import { loginUser } from "../../../services/AuthService";
 import { AxiosError } from "axios";
-import { displayCustomToastError, displayDefaultToastError } from "../../services/ToastHelper";
+import { displayCustomToastError, displayDefaultToastError } from "../../../services/ToastHelper";
 import { useLocation } from "react-router-dom";
-import LoginForm from '../molecules/Auth/LoginForm';
+import LoginForm from '../../molecules/auth/LoginForm';
 
 const Login: React.FC = () => {
     const location = useLocation();
@@ -26,7 +26,7 @@ const Login: React.FC = () => {
 
         try {
             await loginUser(email, password);
-            // window.location.href = redirectUrl;
+            window.location.href = redirectUrl;
         } catch (error) {
             if (!(error instanceof AxiosError) || (error.response?.data.message !== "Invalid credentials.")) {
                 displayDefaultToastError();

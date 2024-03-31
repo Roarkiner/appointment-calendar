@@ -1,0 +1,15 @@
+.slots-container {
+    background-image:
+        linear-gradient(to top, grey 1px, transparent 1px);
+}
+
+.day-column {
+    min-width: 150px;
+}
+
+.time-slot {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px black solid;
+    border-radius: 3px;
+}

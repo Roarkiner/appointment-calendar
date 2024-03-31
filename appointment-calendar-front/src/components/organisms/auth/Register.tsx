@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { registerUser } from "../../services/AuthService";
-import { UserSaveModel } from "../../models/UserSaveModel";
-import { displayCustomToastError, displayDefaultToastError } from "../../services/ToastHelper";
+import { registerUser } from "../../../services/AuthService";
+import { UserSaveModel } from "../../../models/UserSaveModel";
+import { displayCustomToastError, displayDefaultToastError } from "../../../services/ToastHelper";
 import { AxiosError } from "axios";
-import RegistrationForm from '../molecules/Auth/RegistrationForm';
+import RegistrationForm from '../../molecules/auth/RegistrationForm';
 import React from "react";
 
 const Register: React.FC = () => {
@@ -128,7 +128,7 @@ const Register: React.FC = () => {
 
         try {
             await registerUser(new UserSaveModel(email, password, lastname, firstname));
-            // window.location.href = "/";
+            window.location.href = "/";
         } catch (error) {
             if (error instanceof AxiosError) {
                 displayCustomToastError(error.response?.data.message);

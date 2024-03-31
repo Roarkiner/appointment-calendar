@@ -1,5 +1,5 @@
 import React from "react";
-import ButtonAtom from '../../atoms/ButtonAtom';
+import ButtonAtom from '../../atoms/shared/ButtonAtom';
 
 interface FormSwitcherProps {
     selectedForm: "login" | "register";

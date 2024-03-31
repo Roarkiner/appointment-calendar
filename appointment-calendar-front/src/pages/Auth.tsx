@@ -1,8 +1,8 @@
 import "../assets/style/auth.css"
 
 import { useState } from "react";
-import Login from "../components/organisms/Login";
-import Register from "../components/organisms/Register";
+import Login from "../components/organisms/auth/Login";
+import Register from "../components/organisms/auth/Register";
 import { Link } from "react-router-dom";
 import React from "react";
 

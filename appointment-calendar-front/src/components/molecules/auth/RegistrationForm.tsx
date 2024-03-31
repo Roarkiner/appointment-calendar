@@ -1,6 +1,6 @@
 import React from 'react';
-import InputAtom from '../../atoms/InputAtom';
-import ButtonAtom from '../../atoms/ButtonAtom';
+import InputAtom from '../../atoms/shared/InputAtom';
+import ButtonAtom from '../../atoms/shared/ButtonAtom';
 
 interface RegistrationFormProps {
     email: string;

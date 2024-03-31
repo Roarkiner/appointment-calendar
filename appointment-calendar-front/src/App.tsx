@@ -7,10 +7,12 @@ import Auth from "./pages/Auth";
 import { useRoutes } from "react-router-dom";
 import { AuthProvider } from './contexts/AuthContext';
 import React from "react";
+import Home from "./pages/Home";
 
 const AppRoutes: React.FC = () => {
     const routing = useRoutes([
         { path: "/login", element: <Auth /> },
+        { path: "/", element: <Home /> },
     ]);
     
     return <>{routing}</>;
