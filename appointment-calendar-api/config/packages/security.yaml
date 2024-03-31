@@ -27,11 +27,16 @@ security:
     access_control:
         - { path: ^/api/register, roles: PUBLIC_ACCESS }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/service-type, roles: PUBLIC_ACCESS, methods: [GET] }
+        - { path: ^/api/slot, roles: PUBLIC_ACCESS, methods: [GET] }
+        - { path: ^/api/appointment, roles: PUBLIC_ACCESS, methods: [GET] }
         - { path: ^/api/service-type$, roles: ROLE_ADMIN, methods: [POST] }
         - { path: ^/api/service-type/\d+$, roles: ROLE_ADMIN, methods: [PATCH, DELETE] }
         - { path: ^/api/slot$, roles: ROLE_ADMIN, methods: [POST] }
         - { path: ^/api/slot/\d+$, roles: ROLE_ADMIN, methods: [PATCH, DELETE] }
-        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/appointment/\d+$, roles: ROLE_ADMIN, methods: [PATCH, DELETE] }
+        - { path: ^/api/user/\d+$, roles: ROLE_ADMIN, methods: [GET, PATCH, DELETE] }
+        - { path: ^/api/, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
     security:
