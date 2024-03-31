@@ -1,5 +1,6 @@
 import { api } from "./ApiService";
 import { formatDate } from "../services/DateHelper";
+import { AxiosResponse } from "axios";
 
 export const appointmentPath = "/api/appointment";
 
@@ -18,4 +19,10 @@ export async function getAllAppointmentsBetween(startDate: Date, endDate: Date):
     }));
       
     return appointments;
+}
+
+export async function saveAppointment(appointmentToSave: AppointmentSaveModel): Promise<AxiosResponse<any, any>> {
+    const saveAppointmentResponse = await api.post(appointmentPath, appointmentToSave);
+    
+    return saveAppointmentResponse;
 }

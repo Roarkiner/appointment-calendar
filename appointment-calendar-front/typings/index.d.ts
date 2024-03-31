@@ -34,8 +34,22 @@ interface Appointment {
     user: User;
 }
 
+interface AppointmentSaveModel {
+    start_date: string;
+    end_date: string;
+    service_type_id: number;
+    user_id: number;
+}
+
 interface Slot {
     id: number;
     start_date: Date;
     end_date: Date;
+}
+
+interface UserInfoResponseModel {
+    id: number,
+    email: string,
+    lastname: string,
+    firstname: string
 }

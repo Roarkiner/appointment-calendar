@@ -2,6 +2,7 @@ import "./assets/style/app.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import 'react-toastify/dist/ReactToastify.css';
+import "react-datepicker/dist/react-datepicker.css";
 
 import Auth from "./pages/Auth";
 import { useRoutes } from "react-router-dom";

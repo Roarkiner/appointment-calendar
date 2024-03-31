@@ -11,6 +11,8 @@ import { getAllAppointmentsBetween } from '../../../services/AppointmentService'
 import CalendarLegend from "../../molecules/calendar/CalendarLegend";
 import { convertAppointmentsToTimeSlots, convertSlotsToTimeSlots } from "../../../services/DateHelper";
 import { getAllSlotsBetween } from "../../../services/SlotService";
+import { fr } from "date-fns/locale";
+import { useAuth } from "../../../contexts/AuthContext";
 
 export enum WeekDays {
     monday = "Lundi",
@@ -22,12 +24,19 @@ export enum WeekDays {
     sunday = "Dimanche"
 }
 
-const WeeklyCalendar: React.FC = () => {
+interface WeeklyCalendarProps {
+    onModalButtonClicked: () => void;
+    triggerReload: boolean;
+    setTriggerReload: (value: boolean) => void;
+}
+
+const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ onModalButtonClicked, triggerReload, setTriggerReload }) => {
     const QUARTER_HOUR_HEIGHT = 15;
     const [currentDate, setCurrentDate] = useState(new Date());
     const [appointments, setAppointments] = useState<TimeSlot[]>([]);
     const [slots, setSlots] = useState<TimeSlot[]>([]);
     const [loading, setLoading] = useState(true);
+    const { isAuthenticated } = useAuth();
 
     const fetchAppointmentsAndSlots = async () => {
         setLoading(true);
@@ -50,6 +59,13 @@ const WeeklyCalendar: React.FC = () => {
     };
 
     useEffect(() => {
+        if (triggerReload) {
+            fetchAppointmentsAndSlots();
+            setTriggerReload(false);
+        }
+    },[triggerReload, setTriggerReload]);
+
+    useEffect(() => {
         fetchAppointmentsAndSlots();
     }, [currentDate]);
 
@@ -70,13 +86,18 @@ const WeeklyCalendar: React.FC = () => {
     return (
         <div>
             <div className='d-flex justify-content-between'>
-                <h2>Semaine du {format(startOfCurrentWeek, 'PPP')} au {format(endOfCurrentWeek, 'PPP')}</h2>
+                <h2>Semaine du {format(startOfCurrentWeek, 'PPP', { locale: fr })} au {format(endOfCurrentWeek, 'PPP', { locale: fr })}</h2>
                 <div>
                     <ButtonAtom className='previous-week' onClick={goToPreviousWeek} disabled={isBefore(startOfCurrentWeek, today)}><IoChevronBack /></ButtonAtom>
                     <ButtonAtom className='next-week' onClick={goToNextWeek}><IoChevronForward /></ButtonAtom>
                 </div>
             </div>
-            <CalendarLegend />
+            <div className="d-flex">
+                <CalendarLegend />
+                { isAuthenticated &&
+                    <ButtonAtom className="btn btn-primary schedule-appointment ms-3" onClick={onModalButtonClicked}>Prendre un rendez-vous</ButtonAtom>
+                }
+            </div>
             <div className='d-flex calendar-container'>
                 <div className='position-relative'>
                     <HourScale quarterHourHeight={QUARTER_HOUR_HEIGHT}/>

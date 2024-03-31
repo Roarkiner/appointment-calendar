@@ -30,7 +30,7 @@ axiosInstance.interceptors.response.use(
             } else
                 askUserForConnection();
         } else {
-            return Promise.reject(error);
+            throw error;
         }
     }
 );
