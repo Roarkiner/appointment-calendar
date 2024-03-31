@@ -113,7 +113,7 @@ class UserController extends AbstractController
         
         $token = $tokenManager->create($user);
         
-        return new JsonResponse($token, Response::HTTP_CREATED, [], true);
+        return new JsonResponse(["token" => $token], Response::HTTP_CREATED);
     }
     
     #[Route('/api/user/{id}', name: 'user.delete', methods: ['DELETE'])]
