@@ -4,10 +4,14 @@ Ce projet contient une API Symfony permettant de gérer des rendez-vous (par exe
 
 ## Sommaire
 - [Backend (API)](#backend-api)
-	- [Installation (pour Linux)](#installation-linux)
+	- [Installation (Linux)](#installation-linux)
 		- [Prérequis](#prérequis)
 		- [Configuration](#configuration)
 	- [Fonctionnalités](#fonctionnalités)
+ - [Ftont](#front)
+	- [Installation (pour Linux)](#installation-pour-linux)
+	- [Fonctionnalités](#fonctionnalités-front)
+	- [Choses utiles](#choses-utiles)
 
 ## Backend (API)
 
@@ -92,3 +96,35 @@ Toutes les routes à part /api/register et /api/login_check nécessitent d'être
 Il y a un cache serveur et les routes qui récupèrent des ressources possèdent un ETag pour le caching client.
 
 Il y a deux middleware, un pour checker si le compte auquel un utilisateur essaie de s'authentifier avec est désactivé et un pour gérer les erreurs.
+
+## Front
+
+## Installation (pour Linux)
+
+L'installation du front est une chose extrêmement longue et compliquée. Voici les étapes :
+
+S'assurer d'avoir la dernière version de NodeJS et de npm
+```
+npm install
+npm run dev
+```
+Et voilà ! Bravo.
+
+Ne pas oublier de changer, si nécessaire, la constante "apiUrl" dans ..../appointment-calendar-front/src/services/ApiService.tsx pour renvoyer vers la base de l'url utilisé par l'API Symfony.
+
+## Fonctionalités Front
+
+Le front affiche un calendrier avec des zones bleues qui correspondent aux créneaux disponibles enregistrés par l'administrateur (dans l'idée le practicien). Les zones oranges correspondent aux rendez-vous déjà pris, avec le nom du type de prestation dessus.
+
+Il est possible de passer d'une semaine à une autre avec les flèches en haut à droite.
+
+Il est possible de se connecter ou créer un compte. Lorsqu'un utilisateur est connecté, il lui est possible de prendre un rendez-vous en choisissant le type de prestation souhaitée et l'heure de début. L'heure de fin est choisie en fonction de la durée de la prestation choisie.
+
+Lorsqu'un l'utilisateur connecté est un admin, il lui est possible de créer un nouveau créneau (si des créneaux se chevauchent ils fusionneront ensemble) et de créer un nouveau type de prestation.
+
+## Choses utiles
+
+Lors de l'application des fixtures, un compte utilisateur par défaut est créé : "sample_user@gmail.com" avec pour mot de passer "user"
+Un compte admin est aussi créé : "emailerdemo8@gmail.com" avec pour mot de passer "admin"
+
+En cas de problème avec le cache serveur, il suffit d'utiliser la commande `redis-cli FLUSHALL`pour effacer tout le cache existant
