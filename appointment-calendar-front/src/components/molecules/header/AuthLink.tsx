@@ -10,15 +10,15 @@ interface AuthLinkProps {
 const AuthLink: React.FC<AuthLinkProps> = ({ onLogout }) => {
   const { isAuthenticated } = useAuth();
 
-  return (
-    <div>
-      {isAuthenticated ? (
-        <ButtonAtom className="logout" onClick={onLogout}>Déconnexion</ButtonAtom>
-      ) : (
-        <LinkAtom to="/login">Connexion</LinkAtom>
-      )}
-    </div>
-  );
+    return (
+        <div>
+        {isAuthenticated ? (
+            <ButtonAtom className="logout" onClick={onLogout}>Déconnexion</ButtonAtom>
+        ) : (
+            <LinkAtom to="/login">Connexion</LinkAtom>
+        )}
+        </div>
+    );
 };
 
 export default AuthLink;

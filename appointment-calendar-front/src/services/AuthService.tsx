@@ -2,7 +2,6 @@ import { jwtDecode } from "jwt-decode";
 import { api } from "./ApiService";
 import { UserSaveModel } from "../models/UserSaveModel";
 import { saveUser } from "./UserService";
-import { useAuth } from "../contexts/AuthContext";
 
 export function isUserAuthenticated(): boolean {
     return getApiToken() !== null;
@@ -71,10 +70,8 @@ export function askUserForConnection(displayError: boolean = true) {
     window.location.href = `/login?${queryParams}`;
 }
 
-export function disconnectUser(): void {
+export function disconnectUser(setIsAuthenticated: (value: boolean) => void, setIsAdmin: (value: boolean) => void): void {
     removeApiToken();
-    const { setIsAuthenticated, setIsAdmin } = useAuth();
     setIsAuthenticated(false);
     setIsAdmin(false);
-    window.location.href = "/";
 }
