@@ -19,6 +19,11 @@ interface ServiceType {
     duration: string;
 }
 
+interface ServiceTypeSaveModel {
+    name: string;
+    duration: number;
+}
+
 interface User {
     id: number;
     email: string;
@@ -45,6 +50,11 @@ interface Slot {
     id: number;
     start_date: Date;
     end_date: Date;
+}
+
+interface SlotSaveModel {
+    start_date: string;
+    end_date: string;
 }
 
 interface UserInfoResponseModel {

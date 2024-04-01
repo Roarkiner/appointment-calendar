@@ -14,12 +14,14 @@ import { getCurrentUserInfo } from "../../../services/UserService";
 interface ScheduleAppointmentModalProps {
     isModalOpen: boolean;
     closeModal: () => void;
-    onAppointmentCreated: () => void
+    onAppointmentCreated: () => void;
+    triggerReloadServiceTypes: boolean;
+    setTriggerReloadServiceTypes: (value: boolean) => void;
 }
 
 Modal.setAppElement('#root');
 
-const ScheduleAppointmentModal: React.FC<ScheduleAppointmentModalProps> = ({ isModalOpen, closeModal, onAppointmentCreated }) => {
+const ScheduleAppointmentModal: React.FC<ScheduleAppointmentModalProps> = ({ isModalOpen, closeModal, onAppointmentCreated, triggerReloadServiceTypes, setTriggerReloadServiceTypes }) => {
     const { isAuthenticated } = useAuth();
     const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
     const [selectedServiceType, setSelectedServiceType] = useState("");
@@ -30,10 +32,13 @@ const ScheduleAppointmentModal: React.FC<ScheduleAppointmentModalProps> = ({ isM
         const fetchedServiceTypes = await getAllServiceTypes();
         setServiceTypeList(fetchedServiceTypes);
     }
-
+    
     useEffect(() => {
-        loadServiceTypes();
-    }, []);
+        if (triggerReloadServiceTypes) {
+            loadServiceTypes();
+            setTriggerReloadServiceTypes(false);
+        }
+    }, [triggerReloadServiceTypes, setTriggerReloadServiceTypes]);
 
     const trySaveAppointment = async (): Promise<void> => {
         setIsLoading(true);
@@ -67,7 +72,7 @@ const ScheduleAppointmentModal: React.FC<ScheduleAppointmentModalProps> = ({ isM
         const currentUserInfo = await getCurrentUserInfo();
 
         const appointmentSaveModel: AppointmentSaveModel = {
-            start_date: formatDate(selectedDate ?? new Date()),
+            start_date: formatDate(selectedDate!),
             end_date: formatDate(addISODurationToDate(selectedDate!, selectedServiceTypeObj?.duration!)),
             service_type_id: selectedServiceTypeObj?.id! ?? 0,
             user_id: currentUserInfo.id

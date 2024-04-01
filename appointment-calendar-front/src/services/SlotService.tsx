@@ -1,3 +1,4 @@
+import { AxiosResponse } from "axios";
 import { api } from "./ApiService";
 import { formatDate } from "./DateHelper";
 
@@ -18,4 +19,10 @@ export async function getAllSlotsBetween(startDate: Date, endDate: Date): Promis
     }));
       
     return slots;
+}
+
+export async function saveSlot(slotToSave: SlotSaveModel): Promise<AxiosResponse<any, any>> {
+    const saveSlotResponse = await api.post(slotPath, slotToSave);
+    
+    return saveSlotResponse;
 }

@@ -25,18 +25,26 @@ export enum WeekDays {
 }
 
 interface WeeklyCalendarProps {
-    onModalButtonClicked: () => void;
-    triggerReload: boolean;
-    setTriggerReload: (value: boolean) => void;
+    onAppointmentModalButtonClicked: () => void;
+    onSlotModalButtonClicked: () => void;
+    onServiceTypeModalButtonClicked: () => void;
+    triggerReloadCalendar: boolean;
+    setTriggerReloadCalendar: (value: boolean) => void;
 }
 
-const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ onModalButtonClicked, triggerReload, setTriggerReload }) => {
+const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ 
+    onAppointmentModalButtonClicked, 
+    triggerReloadCalendar, 
+    setTriggerReloadCalendar,
+    onSlotModalButtonClicked,
+    onServiceTypeModalButtonClicked
+}) => {
     const QUARTER_HOUR_HEIGHT = 15;
     const [currentDate, setCurrentDate] = useState(new Date());
     const [appointments, setAppointments] = useState<TimeSlot[]>([]);
     const [slots, setSlots] = useState<TimeSlot[]>([]);
     const [loading, setLoading] = useState(true);
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, isAdmin } = useAuth();
 
     const fetchAppointmentsAndSlots = async () => {
         setLoading(true);
@@ -59,11 +67,11 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ onModalButtonClicked, t
     };
 
     useEffect(() => {
-        if (triggerReload) {
+        if (triggerReloadCalendar) {
             fetchAppointmentsAndSlots();
-            setTriggerReload(false);
+            setTriggerReloadCalendar(false);
         }
-    },[triggerReload, setTriggerReload]);
+    }, [triggerReloadCalendar, setTriggerReloadCalendar]);
 
     useEffect(() => {
         fetchAppointmentsAndSlots();
@@ -95,8 +103,12 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ onModalButtonClicked, t
             <div className="d-flex">
                 <CalendarLegend />
                 { isAuthenticated &&
-                    <ButtonAtom className="btn btn-primary schedule-appointment ms-3" onClick={onModalButtonClicked}>Prendre un rendez-vous</ButtonAtom>
+                    <ButtonAtom className="btn btn-primary schedule-appointment-modal ms-3  h-75" onClick={onAppointmentModalButtonClicked}>Prendre un rendez-vous</ButtonAtom>
                 }
+                { isAdmin && <>
+                    <ButtonAtom className="btn btn-secondary add-slot-modal ms-3 h-75" onClick={onSlotModalButtonClicked}>Rajouter un créneau</ButtonAtom>
+                    <ButtonAtom className="btn btn-info add-service-type-modal ms-3 h-75" onClick={onServiceTypeModalButtonClicked}>Rajouter une prestation</ButtonAtom>
+                </>}
             </div>
             <div className='d-flex calendar-container'>
                 <div className='position-relative'>

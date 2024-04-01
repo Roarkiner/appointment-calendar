@@ -19,7 +19,7 @@ export enum TimeSlotType {
 const DayColumn: React.FC<DayColumnProps> = ({ day, appointments, slots, quarterHourHeight }) => {
 
     const renderSlot = (slot: TimeSlot, zIndex: number) => {
-        const height = quarterHourHeight * ((slot.end - slot.start) + 1);
+        const height = quarterHourHeight * ((slot.end - slot.start));
         const topPosition = quarterHourHeight * slot.start;
         const backgroundColor = slot.type === TimeSlotType.appointment ? 'orange' : 'lightblue';
 

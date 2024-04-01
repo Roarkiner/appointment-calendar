@@ -19,12 +19,16 @@ const AddAppointmentForm: React.FC<AddAppointmentFormProps> = ({ selectedDate, s
         <div className="d-flex flex-column">
             <h2 className="mb-4">Prendre un Rendez-vous</h2>
             <ServiceTypeSelect serviceTypes={serviceTypeList} selectedServiceType={selectedServiceType} setSelectedServiceType={setSelectedServiceType} />
+            
+            <label>Heure du rendez-vous:</label>
             <ReactDatePicker
                 selected={selectedDate}
                 onChange={(date: Date) => setSelectedDate(date)}
                 showTimeSelect
                 dateFormat="Pp"
                 locale={fr}
+                timeIntervals={15}
+                minDate={new Date()}
             />
             <ButtonAtom className="confirm-appointment mt-5" onClick={onFormCompletion}>Confirmer le rendez-vous</ButtonAtom>
         </div>

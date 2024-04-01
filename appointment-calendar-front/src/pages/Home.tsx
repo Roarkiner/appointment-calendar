@@ -4,29 +4,72 @@ import React, { useState } from "react";
 import WeeklyCalendar from "../components/organisms/calendar/WeeklyCalendar";
 import Header from "../components/organisms/shared/Header";
 import ScheduleAppointmentModal from "../components/organisms/calendar/ScheduleAppointmentModal";
+import AddSlotModal from "../components/organisms/calendar/AddSlotModal";
+import AddServiceTypeModal from "../components/organisms/calendar/AddServiceTypeModal";
 
 const Home: React.FC = () => {
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [triggerReload, setTriggerReload] = useState(false);
-
-    function openModal() {
-        setIsModalOpen(true);
+    const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
+    const [isSlotModalOpen, setIsSlotModalOpen] = useState(false);
+    const [isServiceTypeModalOpen, setIsServiceTypeModalOpen] = useState(false);
+    const [triggerReloadCalendar, setTriggerReloadCalendar] = useState(false);
+    const [triggerReloadServiceTypes, setTriggerReloadServiceTypes] = useState(false);
+   
+    function reloadCalendar() {
+        setTriggerReloadCalendar(true);
     }
 
-    function closeModal() {
-        setIsModalOpen(false);
+    function reloadServiceTypes() {
+        setTriggerReloadServiceTypes(true);
     }
 
-    function onAppointmentCreated() {
-        setTriggerReload(true);
+    function openAppointmentModal() {
+        setIsAppointmentModalOpen(true);
+    }
+
+    function closeAppointmentModal() {
+        setIsAppointmentModalOpen(false);
+    }
+
+    function openSlotModal() {
+        setIsSlotModalOpen(true);
+    }
+
+    function closeSlotModal() {
+        setIsSlotModalOpen(false);
+    }
+    
+    function openServiceTypeModal() {
+        setIsServiceTypeModalOpen(true);
+    }
+
+    function closeServiceTypeModal() {
+        setIsServiceTypeModalOpen(false);
     }
 
     return (
         <>
-            <ScheduleAppointmentModal onAppointmentCreated={onAppointmentCreated} isModalOpen={isModalOpen} closeModal={closeModal} />
+            <ScheduleAppointmentModal 
+                onAppointmentCreated={reloadCalendar} 
+                isModalOpen={isAppointmentModalOpen} 
+                closeModal={closeAppointmentModal}
+                triggerReloadServiceTypes={triggerReloadServiceTypes}
+                setTriggerReloadServiceTypes={setTriggerReloadServiceTypes} />
+            <AddSlotModal 
+                onSlotCreated={reloadCalendar} 
+                isModalOpen={isSlotModalOpen} 
+                closeModal={closeSlotModal} />
+            <AddServiceTypeModal 
+                isModalOpen={isServiceTypeModalOpen} 
+                closeModal={closeServiceTypeModal} 
+                onServiceTypeCreated={reloadServiceTypes}/>
             <Header />
             <main className="home-container p-3 pe-5">
-                <WeeklyCalendar onModalButtonClicked={openModal} triggerReload={triggerReload} setTriggerReload={setTriggerReload} />
+                <WeeklyCalendar 
+                    onAppointmentModalButtonClicked={openAppointmentModal} 
+                    onSlotModalButtonClicked={openSlotModal}
+                    onServiceTypeModalButtonClicked={openServiceTypeModal}
+                    triggerReloadCalendar={triggerReloadCalendar} 
+                    setTriggerReloadCalendar={setTriggerReloadCalendar} />
             </main>
         </>
     );
