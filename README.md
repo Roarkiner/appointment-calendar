@@ -7,7 +7,7 @@ Ce projet contient une API Symfony permettant de gérer des rendez-vous (par exe
 	- [Installation (Linux)](#installation-linux)
 		- [Prérequis](#prérequis)
 		- [Configuration](#configuration)
-	- [Fonctionalités](#fonctionalités)
+	- [Fonctionnalités](#fonctionnalités)
  - [Ftont](#front)
 	- [Installation (pour Linux)](#installation-pour-linux)
 	- [Fonctionnalités](#fonctionnalités-front)
@@ -82,7 +82,7 @@ Plus qu'à `symfony serve`
 
 **Et voilà !**
 
-## Fonctionalités
+## Fonctionnalités
 L'API sert à stocker des rendez-vous (Appointments), des créneaux (Slots) et des types de prestation (ServiceType). Pour rendre plus clair avec le code je les appellerais par leur nom anglais.
 
 Chaque ressource possède un CRUD que je ne détaillerais pas ici. Pour voir l'ensemble des routes disponibles, veuillez vous référer aux fichiers "Appointment_calendar.postman_collection.json" que vous pouvez importer dans Postman.
@@ -112,7 +112,7 @@ Et voilà ! Bravo.
 
 Ne pas oublier de changer, si nécessaire, la constante "apiUrl" dans ..../appointment-calendar-front/src/services/ApiService.tsx pour renvoyer vers la base de l'url utilisé par l'API Symfony.
 
-## Fonctionalités Front
+## Fonctionnalités Front
 
 Le front affiche un calendrier avec des zones bleues qui correspondent aux créneaux disponibles enregistrés par l'administrateur (dans l'idée le practicien). Les zones oranges correspondent aux rendez-vous déjà pris, avec le nom du type de prestation dessus.
 
