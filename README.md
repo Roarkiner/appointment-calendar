@@ -103,6 +103,7 @@ Il y a deux middleware, un pour checker si le compte auquel un utilisateur essai
 
 L'installation du front est une chose extrêmement longue et compliquée. Voici les étapes :
 
+Se mettre dans le dossier /appointment-calendar-front
 S'assurer d'avoir la dernière version de NodeJS et de npm
 ```
 npm install
