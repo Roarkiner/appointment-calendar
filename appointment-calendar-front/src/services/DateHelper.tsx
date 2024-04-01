@@ -17,7 +17,14 @@ export const formatDate = (date: Date) => {
 
 export function convertISODurationToReadableFormat(isoDuration: string) {
     const duration = Duration.fromISO(isoDuration);
-    return `${duration.hours > 0 ? `${duration.hours}h` : ''}${duration.minutes > 0 ? `${duration.minutes}` : ''}`;
+    const hours = duration.hours;
+    const minutes = duration.minutes;
+    const hoursFromMinutes = Math.floor(minutes / 60);
+    const minutesLeft = minutes - hoursFromMinutes * 60;
+    if (hours + hoursFromMinutes > 0)
+        return `${hours + hoursFromMinutes}h${minutesLeft > 0 ? minutesLeft : "00"}`;
+    else
+        return `${minutesLeft}min`;
 }
 
 export const addISODurationToDate = (date: Date, isoDuration: string): Date => {
