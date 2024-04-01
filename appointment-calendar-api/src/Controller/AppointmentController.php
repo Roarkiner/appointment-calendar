@@ -132,13 +132,13 @@ class AppointmentController extends AbstractController
             }
             return new JsonResponse(['errors' => $messages], Response::HTTP_BAD_REQUEST);
         }
-
+        
         //Check if one of multiple appointment already exist for the period of teh new appointment
         $doesOverlap = $appointmentRepository->doesAppointmentOverlap($appointment->getStartDate(), $appointment->getEndDate());
         if ($doesOverlap) {
             return new JsonResponse(['errors' => 'Appointment overlaps with another appointment'], Response::HTTP_CONFLICT);
         }
-
+        
         //Check that the service sype id provided exists
         $content = $request->toArray();
         
@@ -146,11 +146,19 @@ class AppointmentController extends AbstractController
         if (!$serviceType) {
             return new JsonResponse(['errors' => 'ServiceType not found or is inactive'], Response::HTTP_BAD_REQUEST);
         }
-
+        
         //Check that the user id provided exists
         $user = $userRepository->findActive($content['user_id'] ?? 0);
+
         if (!$user) {
             return new JsonResponse(['errors' => 'User not found or is inactive'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $currentUser = $this->getUser();
+
+        if (!in_array("ROLE_ADMIN", $currentUser->getRoles()) && $currentUser->getUserIdentifier() != $user->getEmail())
+        {
+            return new JsonResponse(null, Response::HTTP_UNAUTHORIZED);
         }
         
         //Check that the appointment is created inside an existing slot
@@ -158,13 +166,13 @@ class AppointmentController extends AbstractController
         if (!$slot) {
             return new JsonResponse(['errors' => 'The appointment should be within a valid slot'], Response::HTTP_BAD_REQUEST);
         }
-
+        
         $appointment->setServiceType($serviceType)
         ->setUser($user);
-
+        
         $entityManager->persist($appointment);
         $entityManager->flush();
-
+        
         $cache->invalidateTags(['appointment_get_all']);
         $cache->delete("user.get/{$appointment->getUser()->getId()}");
         
@@ -172,7 +180,7 @@ class AppointmentController extends AbstractController
         $jsonAppointment = $serializer->serialize($appointment, 'json', $context);
         return new JsonResponse($jsonAppointment, Response::HTTP_CREATED, [], true);
     }
-
+    
     #[Route('/api/appointment/{id}', name: 'appointment.update', methods: ['PATCH'])]
     public function updateAppointment(int $id, 
         Request $request, 
@@ -193,7 +201,7 @@ class AppointmentController extends AbstractController
 
         $currentUser = $this->getUser();
 
-        if (in_array("ROLE_ADMIN", $currentUser->getRoles()) && $currentUser->getUserIdentifier() != $appointment->getUser()->getEmail())
+        if (!in_array("ROLE_ADMIN", $currentUser->getRoles()) && $currentUser->getUserIdentifier() != $appointment->getUser()->getEmail())
         {
             return new JsonResponse(null, Response::HTTP_UNAUTHORIZED);
         }
