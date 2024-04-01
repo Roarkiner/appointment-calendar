@@ -7,7 +7,7 @@ Ce projet contient une API Symfony permettant de gérer des rendez-vous (par exe
 	- [Installation (Linux)](#installation-linux)
 		- [Prérequis](#prérequis)
 		- [Configuration](#configuration)
-	- [Fonctionnalités](#fonctionnalités)
+	- [Fonctionalités](#fonctionalités)
  - [Ftont](#front)
 	- [Installation (pour Linux)](#installation-pour-linux)
 	- [Fonctionnalités](#fonctionnalités-front)
@@ -82,7 +82,7 @@ Plus qu'à `symfony serve`
 
 **Et voilà !**
 
-## Fonctionnalités
+## Fonctionalités
 L'API sert à stocker des rendez-vous (Appointments), des créneaux (Slots) et des types de prestation (ServiceType). Pour rendre plus clair avec le code je les appellerais par leur nom anglais.
 
 Chaque ressource possède un CRUD que je ne détaillerais pas ici. Pour voir l'ensemble des routes disponibles, veuillez vous référer aux fichiers "Appointment_calendar.postman_collection.json" que vous pouvez importer dans Postman.
