@@ -10,6 +10,7 @@ import { toast } from "react-toastify";
 import { saveAppointment } from "../../../services/AppointmentService";
 import { addISODurationToDate, formatDate } from "../../../services/DateHelper";
 import { getCurrentUserInfo } from "../../../services/UserService";
+import { AxiosError } from "axios";
 
 interface ScheduleAppointmentModalProps {
     isModalOpen: boolean;
@@ -70,15 +71,16 @@ const ScheduleAppointmentModal: React.FC<ScheduleAppointmentModalProps> = ({ isM
         }
 
         const currentUserInfo = await getCurrentUserInfo();
-
-        const appointmentSaveModel: AppointmentSaveModel = {
-            start_date: formatDate(selectedDate!),
-            end_date: formatDate(addISODurationToDate(selectedDate!, selectedServiceTypeObj?.duration!)),
-            service_type_id: selectedServiceTypeObj?.id! ?? 0,
-            user_id: currentUserInfo.id
-        }
-
+        
         try {
+
+            const appointmentSaveModel: AppointmentSaveModel = {
+                start_date: formatDate(selectedDate!),
+                end_date: formatDate(addISODurationToDate(selectedDate!, selectedServiceTypeObj?.duration!)),
+                service_type_id: selectedServiceTypeObj?.id! ?? 0,
+                user_id: currentUserInfo.id
+            }
+
             const saveAppointmentResponse = await saveAppointment(appointmentSaveModel);
             
             setIsLoading(false);
@@ -92,21 +94,41 @@ const ScheduleAppointmentModal: React.FC<ScheduleAppointmentModalProps> = ({ isM
                     draggable: false
                 });
             }
-
+            
             onAppointmentCreated();
+            closeModal();
         } catch (e: any) {
-            e.response.data.errors.forEach((errorMessage: string) => {
-                toast.error(errorMessage, {
+            if (e instanceof AxiosError ) {
+                if (Array.isArray(e.response?.data.errors)) {
+                    e.response?.data.errors.forEach((errorMessage: string) => {
+                        toast.error(errorMessage, {
+                            position:'bottom-right',
+                            autoClose: 3000,
+                            closeOnClick: true,
+                            pauseOnHover: true,
+                            draggable: false
+                        });
+                    });
+                } else {
+                    toast.error(e.response?.data.errors, {
+                        position:'bottom-right',
+                        autoClose: 3000,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: false
+                    });
+                }
+            } else {
+                toast.error(e.message, {
                     position:'bottom-right',
                     autoClose: 3000,
                     closeOnClick: true,
                     pauseOnHover: true,
                     draggable: false
                 });
-            });
+            }
         } finally {
             setIsLoading(false);
-            closeModal();
         }
     }
 
