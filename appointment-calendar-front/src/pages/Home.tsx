@@ -12,7 +12,7 @@ const Home: React.FC = () => {
     const [isSlotModalOpen, setIsSlotModalOpen] = useState(false);
     const [isServiceTypeModalOpen, setIsServiceTypeModalOpen] = useState(false);
     const [triggerReloadCalendar, setTriggerReloadCalendar] = useState(false);
-    const [triggerReloadServiceTypes, setTriggerReloadServiceTypes] = useState(false);
+    const [triggerReloadServiceTypes, setTriggerReloadServiceTypes] = useState(true);
    
     function reloadCalendar() {
         setTriggerReloadCalendar(true);
