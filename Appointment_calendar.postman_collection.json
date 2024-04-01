@@ -110,8 +110,34 @@
 				{
 					"name": "GetUser",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtTokenAdmin}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:{{currentIp}}/api/user/2",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "{{currentIp}}",
+							"path": [
+								"api",
+								"user",
+								"2"
+							]
+						}
 					},
 					"response": []
 				},
@@ -194,7 +220,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{jwtTokenUser}}",
+									"value": "",
 									"type": "string"
 								}
 							]
@@ -227,7 +253,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{jwtTokenUser}}",
+									"value": "",
 									"type": "string"
 								}
 							]
@@ -385,7 +411,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{jwtTokenUser}}",
+									"value": "",
 									"type": "string"
 								}
 							]
@@ -411,14 +437,14 @@
 					"response": []
 				},
 				{
-					"name": "Get",
+					"name": "GetAll Between",
 					"request": {
 						"auth": {
 							"type": "bearer",
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{jwtTokenUser}}",
+									"value": "",
 									"type": "string"
 								}
 							]
@@ -426,7 +452,56 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://127.0.0.1:{{currentIp}}/api/slot/5",
+							"raw": "http://127.0.0.1:{{currentIp}}/api/slot?start_date=2024-04-9 7:00&end_date=2024-04-20 19:00",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "{{currentIp}}",
+							"path": [
+								"api",
+								"slot"
+							],
+							"query": [
+								{
+									"key": "start_date",
+									"value": "2024-04-9 7:00"
+								},
+								{
+									"key": "end_date",
+									"value": "2024-04-20 19:00"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "If-None-Match",
+								"value": "2fd64cfe5b36d5ffc29435f4793eb945",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://127.0.0.1:{{currentIp}}/api/slot/22",
 							"protocol": "http",
 							"host": [
 								"127",
@@ -438,7 +513,7 @@
 							"path": [
 								"api",
 								"slot",
-								"5"
+								"22"
 							]
 						}
 					},
@@ -461,7 +536,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"start_date\": \"2024-03-31 16:15\",\r\n    \"end_date\": \"2024-03-31 17:00\"\r\n}",
+							"raw": "{\r\n    \"start_date\": \"2024-04-01 14:30\",\r\n    \"end_date\": \"2024-04-03 16:30\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -503,7 +578,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"start_date\": \"2024-03-31 15:30\",\r\n    \"end_date\": \"2024-03-31 16:00\"\r\n}",
+							"raw": "{\r\n    \"start_date\": \"2024-04-01 12:00\",\r\n    \"end_date\": \"2024-04-01 12:30\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -511,7 +586,7 @@
 							}
 						},
 						"url": {
-							"raw": "http://127.0.0.1:{{currentIp}}/api/slot/100",
+							"raw": "http://127.0.0.1:{{currentIp}}/api/slot/22",
 							"protocol": "http",
 							"host": [
 								"127",
@@ -523,7 +598,7 @@
 							"path": [
 								"api",
 								"slot",
-								"100"
+								"22"
 							]
 						}
 					},
@@ -576,7 +651,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{jwtTokenUser}}",
+									"value": "",
 									"type": "string"
 								}
 							]
@@ -602,14 +677,14 @@
 					"response": []
 				},
 				{
-					"name": "Get",
+					"name": "GetAll Between",
 					"request": {
 						"auth": {
 							"type": "bearer",
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{jwtTokenUser}}",
+									"value": "",
 									"type": "string"
 								}
 							]
@@ -617,7 +692,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://127.0.0.1:{{currentIp}}/api/slot/appointment",
+							"raw": "http://127.0.0.1:{{currentIp}}/api/appointment?start_date=2024-04-9 7:00&end_date=2024-04-20 19:00",
 							"protocol": "http",
 							"host": [
 								"127",
@@ -628,8 +703,51 @@
 							"port": "{{currentIp}}",
 							"path": [
 								"api",
-								"slot",
 								"appointment"
+							],
+							"query": [
+								{
+									"key": "start_date",
+									"value": "2024-04-9 7:00"
+								},
+								{
+									"key": "end_date",
+									"value": "2024-04-20 19:00"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:{{currentIp}}/api/appointment/5",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "{{currentIp}}",
+							"path": [
+								"api",
+								"appointment",
+								"5"
 							]
 						}
 					},
@@ -652,7 +770,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"start_date\": \"2024-03-31 16:15\",\r\n    \"end_date\": \"2024-03-31 17:00\"\r\n}",
+							"raw": "{\r\n    \"start_date\": \"2024-04-24 15:00\",\r\n    \"end_date\": \"2024-04-24 17:00\",\r\n    \"user_id\": 4,\r\n    \"service_type_id\": 6\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -694,7 +812,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"user_id\": 2\r\n}",
+							"raw": "{\r\n    \"start_date\": \"2024-04-04 12:15\",\r\n    \"end_date\": \"2024-04-04 14:15\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -728,7 +846,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{jwtTokenAdmin}}",
+									"value": "{{jwtTokenUser}}",
 									"type": "string"
 								}
 							]
